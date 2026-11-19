@@ -1,0 +1,32 @@
+{
+  "id": "VST-01",
+  "duration": 12,
+  "egoSpeed": 12,
+  "truckSpeed": 11.85,
+  "truckStart": 13.8,
+  "targetStart": 32.5,
+  "targetSpeed": 10.4,
+  "targetId": "V-024",
+  "truckSize": [2.62, 3.635, 7.516],
+  "targetSize": [2.5672, 1.1601, 4.4],
+  "samplePeriod": 0.1,
+  "renderLag": 0.016,
+  "existence": 0.97,
+  "classification": 0.93,
+  "sigma": {
+    "high": 0.14,
+    "medium": 0.65,
+    "low": 1.85
+  },
+  "lateralRateError": 0.65,
+  "confirmedSigma": 0.4,
+  "regionSigma": 1.2,
+  "maxAge": 1.5,
+  "nearAge": 0.45,
+  "recoverySeconds": 0.3,
+  "hudHalfAnglesDeg": [12, 7],
+  "riskHorizon": 11,
+  "eyeHeight": 1.38,
+  "pitch": 0.015,
+  "horizontalFov": 88
+}

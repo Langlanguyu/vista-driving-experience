@@ -1,0 +1,891 @@
+:root {
+  font-family:
+    "Helvetica Neue", Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #f6f6f0;
+  background: #181c1e;
+  font-synthesis: none;
+  --ease: cubic-bezier(0.22, 0.74, 0.2, 1);
+  --paper: #f2f1e9;
+  --ink: #242c2b;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  border: 0;
+  background: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.43;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #98cec0;
+  outline-offset: 2px;
+}
+button:hover:not(:disabled) {
+  filter: brightness(1.13);
+}
+main {
+  height: 100svh;
+  min-height: 350px;
+  position: relative;
+  overflow: hidden;
+  background: #a7c8d8;
+}
+.view,
+.hudLayer,
+.hud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hudLayer,
+.hud {
+  pointer-events: none;
+}
+.hudLayer {
+  transition: opacity 0.15s ease;
+}
+.hudLayer.fadeOut {
+  opacity: 0;
+}
+.mast {
+  position: absolute;
+  top: 23px;
+  left: 2.8%;
+  right: 2.8%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.mast button {
+  pointer-events: auto;
+}
+.brandMark,
+.mastActions {
+  display: flex;
+  align-items: center;
+}
+.brandMark {
+  gap: 9px;
+  color: #fff;
+  text-shadow: 0 1px 5px #101a1c66;
+  filter: drop-shadow(0 1px 2px #1d25254d);
+  animation: lineIn 0.7s var(--ease) both;
+}
+.brandMark strong {
+  font:
+    italic 730 22px/1 "Helvetica Neue",
+    sans-serif;
+  letter-spacing: 0.14em;
+}
+.mastActions {
+  gap: 5px;
+  color: white;
+}
+.mastActions button {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  background: #232b2ad1;
+}
+.simulation {
+  font-size: 11px;
+  text-shadow: 0 1px 3px #121b1c;
+  margin-right: 5px;
+}
+.modeTitle {
+  position: absolute;
+  top: 82px;
+  left: 3%;
+  color: white;
+  text-shadow: 0 1px 4px #10181980;
+  pointer-events: none;
+  animation: sceneIntro 3.6s var(--ease) both;
+}
+.modeTitle span,
+.micro {
+  font-size: 9px;
+  font-weight: 550;
+  letter-spacing: 0.2em;
+}
+.modeTitle h1 {
+  font-weight: 510;
+  font-size: 26px;
+  margin: 4px 0;
+  letter-spacing: 0.08em;
+}
+.drivingReadout {
+  position: absolute;
+  left: 3%;
+  bottom: 29px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  color: #f5f8f2;
+  text-shadow: 0 1px 6px #182021;
+}
+.drivingReadout span {
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 430;
+  letter-spacing: -2px;
+}
+.drivingReadout small {
+  font-size: 11px;
+}
+.drivingReadout b {
+  font: 10px monospace;
+  padding: 1px 3px;
+  border: 1px solid #c0c7c2;
+  border-radius: 3px;
+}
+.controls {
+  position: absolute;
+  bottom: 21px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: #1c2524f0;
+  color: #f2f3ed;
+  border: 1px solid #ffffff38;
+  border-radius: 28px;
+  padding: 5px 8px 5px 5px;
+  box-shadow: 0 4px 18px #151b193d;
+}
+.bar button {
+  height: 32px;
+  padding: 0 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bar .play {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ebece1;
+  color: #25312b;
+  padding: 0;
+}
+.hudToggle i,
+.note i {
+  background: #a4bfb0;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+}
+.hudToggle[aria-pressed="false"] i {
+  background: #7e8681;
+}
+.revealBtn[aria-pressed="true"] {
+  color: #f2c68e;
+}
+.sep {
+  height: 15px;
+  width: 1px;
+  background: #ffffff29;
+}
+.bar .fold {
+  width: 31px;
+  padding: 0;
+}
+.drawer {
+  width: min(365px, 90vw);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(8px);
+  border-radius: 12px;
+  background: #f1f0e9f7;
+  color: var(--ink);
+  transition:
+    max-height 0.32s var(--ease),
+    opacity 0.24s var(--ease),
+    transform 0.32s var(--ease);
+  box-shadow: 0 6px 24px #12211b40;
+}
+.open .drawer {
+  max-height: min(365px, 65svh);
+  overflow: auto;
+  opacity: 1;
+  transform: none;
+}
+.drawerContent {
+  padding: 18px 19px 12px;
+}
+.drawerHead,
+.trackLabel,
+.setting,
+.options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.drawerHead {
+  margin-bottom: 14px;
+}
+.drawerHead h2 {
+  font-size: 19px;
+  font-weight: 560;
+  margin: 3px 0;
+}
+.micro {
+  color: #65756a;
+}
+.trackLabel,
+.setting,
+.options,
+.note {
+  font-size: 12px;
+}
+.trackLabel output {
+  font:
+    12px ui-monospace,
+    Menlo,
+    monospace;
+}
+.trackLabel span {
+  color: #758279;
+}
+.drawer input,
+.param input {
+  width: 100%;
+  accent-color: #526e62;
+}
+.drawer input {
+  margin: 10px 0 11px;
+  height: 4px;
+}
+.setting {
+  padding: 5px 0;
+}
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: #dfdfd6;
+  border-radius: 5px;
+}
+.seg button {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+.seg button[aria-pressed="true"] {
+  color: white;
+  background: #3f5149;
+}
+.options {
+  border-top: 1px solid #c4cbc1;
+  margin-top: 11px;
+  padding-top: 9px;
+}
+.options button {
+  font-size: 11px;
+  padding: 5px;
+}
+.note {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #526359;
+  margin: 9px 0 0;
+}
+.note i {
+  background: #718d7b;
+}
+.calloutLine,
+.lesson path,
+.lesson ellipse {
+  stroke: currentColor;
+  stroke-width: 1.2;
+  fill: none;
+}
+.hudIn,
+.lesson {
+  filter: drop-shadow(0 1px 2px #182722ad);
+}
+.hud text {
+  fill: currentColor;
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+}
+.hud text.measure {
+  font-size: 12px;
+  font-weight: 450;
+  letter-spacing: 0.05em;
+}
+.vehicleEcho {
+  animation: ghostIn 0.52s var(--ease) both;
+}
+.anchorRing,
+.calloutLine {
+  animation: ghostIn 0.24s var(--ease) both;
+}
+.calloutText {
+  animation: ghostIn 0.42s 0.15s var(--ease) both;
+}
+.lesson {
+  color: #fff0cf;
+}
+.lesson circle {
+  fill: #ffe4b3;
+}
+.lesson ellipse {
+  stroke-dasharray: 3 4;
+}
+.direction,
+.lessonNote,
+.loading {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  background: #202a28ef;
+  color: #f6eddb;
+  border-radius: 5px;
+  padding: 7px 13px;
+}
+.direction {
+  top: 35%;
+  border-left: 2px solid #d2b17b;
+}
+.direction small {
+  font-size: 10px;
+  margin-left: 8px;
+}
+.lessonNote {
+  top: 23px;
+  font-size: 12px;
+  animation: ghostIn 0.4s var(--ease);
+}
+.lessonNote b {
+  font-weight: 550;
+  color: #efd0a4;
+}
+.loading {
+  top: 48%;
+}
+dialog {
+  background: #f4f3eb;
+  border: 0;
+  border-radius: 12px;
+  color: var(--ink);
+  padding: 18px 23px;
+  width: min(420px, 92vw);
+}
+dialog::backdrop {
+  background: #0d17166b;
+}
+.dialogHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dialogHead h2 {
+  font-size: 20px;
+  margin: 4px 0 12px;
+}
+dialog p,
+dialog dd {
+  font-size: 13px;
+  line-height: 1.65;
+}
+dialog dt {
+  font-weight: 600;
+  font-size: 13px;
+}
+dialog dd {
+  margin: 3px 0 12px;
+}
+dialog a {
+  color: inherit;
+}
+.param {
+  display: block;
+  font-size: 14px;
+  margin: 16px 0;
+}
+.param b {
+  float: right;
+}
+.panelToggle {
+  background: #37493f;
+  color: white;
+  border-radius: 5px;
+  padding: 7px 11px;
+}
+details {
+  position: absolute;
+  right: 10px;
+  top: 70px;
+  background: #26312c;
+  padding: 8px;
+}
+pre {
+  max-height: 50vh;
+  overflow: auto;
+}
+@keyframes ghostIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lineIn {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100%);
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+@keyframes sceneIntro {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 0 100%);
+    transform: translateY(7px);
+  }
+  16%,
+  69% {
+    opacity: 1;
+    clip-path: inset(0);
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0);
+    transform: translateY(-3px);
+  }
+}
+@media (max-width: 670px) {
+  .drivingReadout {
+    bottom: 79px;
+  }
+  .mast {
+    top: 15px;
+  }
+  .lessonNote {
+    top: 60px;
+    max-width: 90%;
+    width: max-content;
+    font-size: 10px;
+  }
+  .controls {
+    bottom: 15px;
+  }
+  .hud text {
+    font-size: 12px;
+  }
+  .bar button {
+    font-size: 11px;
+  }
+  .sceneCaption {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+  .modeTitle {
+    display: none;
+  }
+}
+.mast {
+  z-index: 4;
+}
+.mastActions select,
+.mastActions .experience {
+  pointer-events: auto;
+  width: auto;
+  border: 1px solid #ffffff3a;
+  border-radius: 20px;
+  background: #202a28e8;
+  color: #f6f6ed;
+  font:
+    550 10px/1.1 "Helvetica Neue",
+    sans-serif;
+  letter-spacing: 0.06em;
+  padding: 0 12px;
+  height: 31px;
+}
+.mastActions select {
+  font-size: 12px;
+  color-scheme: dark;
+}
+.setting select {
+  border: 1px solid #bdc6bd;
+  border-radius: 4px;
+  font: inherit;
+  padding: 4px;
+  background: #edeee6;
+  color: #2f4037;
+}
+.open .drawer {
+  max-height: min(475px, 68svh);
+}
+.direction.edgeLeft,
+.direction.edgeRight {
+  top: 48%;
+  transform: none;
+  border-left: 3px solid #e1b976;
+  background: #25302eea;
+}
+.direction.edgeLeft {
+  left: 3%;
+}
+.direction.edgeRight {
+  right: 3%;
+  left: auto;
+}
+.direction[data-risk="urgent"] {
+  border-color: #f29a64;
+  color: #ffe1b8;
+}
+.direction small {
+  display: block;
+  margin: 3px 0 0;
+}
+.compareLabels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 0;
+  background: linear-gradient(
+    transparent calc(50% - 1px),
+    #deddd6 50%,
+    transparent calc(50% + 1px)
+  );
+}
+.compareLabels span {
+  position: absolute;
+  top: 10%;
+  left: 3%;
+  color: white;
+  background: #202a28dc;
+  font-size: 12px;
+  padding: 6px 11px;
+  border-radius: 4px;
+}
+.compareLabels span + span {
+  top: 52%;
+}
+.storyScroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  outline: none;
+}
+.scrollLength {
+  height: 560vh;
+}
+.storyCopy {
+  pointer-events: none;
+  position: absolute;
+  left: 5%;
+  bottom: 18%;
+  width: min(460px, 86vw);
+  color: #fff;
+  text-shadow: 0 2px 10px #111;
+}
+.storyCopy h1,
+.storyCopy p,
+.storyCopy small {
+  animation: lineIn 0.55s var(--ease) both;
+}
+.storyCopy h1 {
+  font-size: clamp(34px, 4vw, 62px);
+  font-weight: 500;
+  margin: 8px 0;
+  letter-spacing: -0.025em;
+}
+.storyCopy small {
+  letter-spacing: 0.19em;
+  font-size: 11px;
+}
+.storyCopy p {
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0;
+}
+.storyNav {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 5%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  text-shadow: 0 1px 4px #172521;
+}
+.storyNav progress {
+  flex: 1;
+  height: 3px;
+  accent-color: #c0dacc;
+}
+.storyNav button {
+  background: #1e2827ec;
+  padding: 8px 12px;
+  border-radius: 18px;
+}
+@media (max-width: 600px) {
+  .mastActions .experience {
+    font-size: 9px;
+    padding: 0 7px;
+  }
+  .mastActions select {
+    padding: 0 3px;
+  }
+  .storyNav {
+    gap: 6px;
+  }
+}
+
+.sceneDissolve {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: sceneSettle 0.39s var(--ease) both;
+}
+@keyframes sceneSettle {
+  from {
+    background: #19222240;
+  }
+  to {
+    background: transparent;
+  }
+}
+
+.comparePane {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+}
+.comparePane.pane0 {
+  top: 0;
+}
+.comparePane.pane1 {
+  top: 50%;
+}
+.comparePane > div {
+  position: absolute;
+  top: -50%;
+  height: 200%;
+  width: 100%;
+}
+.evidenceBar {
+  position: absolute;
+  bottom: 87px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+  background: #212b28eb;
+  border: 1px solid #ffffff25;
+  border-radius: 6px;
+  padding: 8px 13px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.evidenceBar strong {
+  color: #c4e5d9;
+}
+.evidenceBar[data-policy="PERCEPTION_LIMITED"] strong,
+.evidenceBar[data-policy="DIRECTION_ONLY"] strong {
+  color: #efd09a;
+}
+.evidenceBar span {
+  color: #d1d6cf;
+}
+.evidenceBar b {
+  font-weight: 550;
+  color: white;
+}
+main:has(.controls.open) .evidenceBar {
+  top: 76px;
+  bottom: auto;
+}
+.fogControls {
+  border: 1px solid #c2cbc0;
+  border-radius: 6px;
+  margin: 12px 0;
+  padding: 10px;
+  color: #38453d;
+  font-size: 12px;
+}
+.fogControls label {
+  margin: 6px 0;
+}
+.fogControls input[type="checkbox"] {
+  accent-color: #526e62;
+}
+dialog {
+  max-height: 89svh;
+  overflow-y: auto;
+}
+@media (max-width: 530px) {
+  .evidenceBar {
+    gap: 6px;
+    padding: 6px;
+    font-size: 10px;
+    bottom: 123px;
+  }
+}
+.opticalControls,
+.opticalReadout,
+.futureDirection {
+  position: absolute;
+  z-index: 5;
+  color: #e7ede3;
+}
+.opticalControls {
+  top: 84px;
+  right: 24px;
+  width: min(280px, 42vw);
+  max-height: calc(100% - 120px);
+  overflow: auto;
+  padding: 22px;
+  background: #1b2424f2;
+  border: 1px solid #7b8a7d55;
+  border-radius: 8px;
+}
+.opticalControls > div:first-child,
+.labDial span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.opticalControls small,
+.opticalReadout small {
+  font: 10px monospace;
+  letter-spacing: 0.14em;
+  color: #bdd0bc;
+}
+.opticalControls h2 {
+  font-size: 25px;
+  margin: 10px 0;
+}
+.opticalControls p,
+.opticalReadout span,
+.projectionResearch output {
+  font-size: 12px;
+  line-height: 1.65;
+}
+.opticalControls button,
+.opticalSwitches button {
+  color: inherit;
+  background: transparent;
+  border: 1px solid #71807977;
+  border-radius: 4px;
+}
+.opticalSwitches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.opticalSwitches button {
+  padding: 6px;
+}
+.opticalSwitches button[aria-pressed="true"] {
+  background: #d0decc;
+  color: #172822;
+}
+.labDial {
+  display: block;
+  margin: 11px 0;
+  font-size: 12px;
+}
+.labDial input {
+  width: 100%;
+  accent-color: #b9ceb5;
+}
+.opticalReadout {
+  left: 4.5vw;
+  top: 18%;
+  display: grid;
+  gap: 4px;
+  text-shadow: 0 1px 5px #152621;
+  background: #172221cf;
+  padding: 12px 16px;
+  border-left: 2px solid #bbc8a8;
+  pointer-events: none;
+}
+.opticalReadout b {
+  font-size: 22px;
+}
+.futureDirection {
+  top: 48%;
+  left: 24%;
+  background: #18211fdc;
+  border-left: 2px solid #f6ce8d;
+  padding: 7px 13px;
+  font-size: 16px;
+}
+.projectionResearch {
+  margin: 8px 0;
+  font-size: 13px;
+}
+.projectionResearch summary {
+  cursor: pointer;
+}
+.projectionResearch output {
+  display: block;
+}
+.drawerContent {
+  max-height: min(69vh, 650px);
+  overflow-y: auto;
+}
+.filmMode .opticalReadout {
+  left: auto;
+  right: 4vw;
+  top: 22%;
+}

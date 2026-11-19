@@ -1,0 +1,40 @@
+import {chromium} from "playwright";
+import {mkdir,writeFile} from "node:fs/promises";
+const root=process.env.VISTA_URL??"http://127.0.0.1:5173/",label=process.env.VISTA_CHECK??"development";
+await mkdir("release/verification",{recursive:true});
+const browser=await chromium.launch({channel:"chrome"});
+const ctx=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:"block"}),page=await ctx.newPage();
+const errors=[],blocked=[],models=new Set(),failed=[];
+await ctx.route("**/*",route=>{
+  const url=new URL(route.request().url());
+  if(url.origin!==new URL(root).origin){blocked.push(url.href);return route.abort();}
+  return route.continue();
+});
+page.on("pageerror",e=>errors.push(e.message));
+page.on("response",r=>{if(r.status()>=400)failed.push([r.status(),r.url()]);if(r.url().endsWith(".glb")&&r.status()===200)models.add(new URL(r.url()).pathname)});
+async function attr(selector,key,value){await page.waitForFunction(({selector,key,value})=>document.querySelector(selector)?.getAttribute(key)===value,{selector,key,value},{timeout:15000})}
+try{
+ await page.goto(root);await attr(".view","data-ready","true");
+ await attr(".view","data-xray","true");
+ await page.getByRole("button",{name:"HUD ON",exact:true}).click();await attr(".view","data-xray","false");
+ await page.getByRole("button",{name:"HUD OFF",exact:true}).click();
+ await page.getByLabel("展开控制台").click();
+ for(const [name,policy]of [["中质量","ESTIMATED_TARGET"],["低质量","DIRECTION_ONLY"],["高质量","CONFIRMED_TARGET"]]){
+   await page.getByRole("button",{name,exact:true}).click();await attr(".spatial,.direction","data-policy",policy);
+ }
+ await page.getByLabel("驾驶场景").selectOption("cross");
+ await page.getByLabel("研究投影",{exact:true}).selectOption("left");await attr(".view","data-strength","-1.0000");
+ await page.getByLabel("研究投影",{exact:true}).selectOption("right");await attr(".view","data-strength","1.0000");
+ await page.getByLabel("驾驶场景").selectOption("degraded");await page.getByRole("slider",{name:"场景时间",exact:true}).fill("7.2");await attr(".direction","data-policy","PERCEPTION_LIMITED");
+ await page.getByRole("button",{name:"OPTICAL LAB",exact:true}).click();await attr(".view","data-rays","9");
+ await page.getByRole("slider",{name:"眼点横移"}).fill("84");await attr(".view","data-rays","0");await page.getByLabel("退出光学实验").click();
+ await page.getByRole("button",{name:"STORY EXPERIENCE"}).click();
+ for(const t of [27,60,97,126,155,171,180])await page.getByLabel("影片时间").fill(String(t));
+ await page.getByRole("button",{name:"REPLAY STORY",exact:true}).waitFor();
+ await page.screenshot({path:"release/verification/"+label+".png"});
+ await page.getByRole("button",{name:"LIVE LAB ↗",exact:true}).click();
+ await page.getByLabel("驾驶场景").waitFor();
+ if(models.size!==4||errors.length||blocked.length||failed.length)throw Error(JSON.stringify({models:[...models],errors,blocked,failed}));
+ const result={url:root,browser:browser.version(),externalNetwork:"all non-origin requests blocked before fresh load",models:[...models],errors,blocked,failed,checks:["world","xray","quality-cycle","adaptive-left-right","degraded","optical-eye-box","seven-story-seeks","return-to-lab"]};
+ await writeFile("release/verification/"+label+".json",JSON.stringify(result,null,2));console.log(label+" passed");
+}finally{await browser.close()}

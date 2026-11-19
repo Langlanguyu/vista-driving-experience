@@ -1,0 +1,343 @@
+.film {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #f1f1e6;
+  --gutter: clamp(20px, 4.8vw, 88px);
+}
+.film .storyScroll {
+  pointer-events: auto;
+  z-index: 1;
+  touch-action: pan-y;
+}
+.filmScrollLength {
+  height: 2400svh;
+}
+.filmMode .mast {
+  left: 4.8%;
+  right: 4.8%;
+  top: 3.5%;
+}
+.filmMode .brandMark {
+  filter: drop-shadow(0 1px 6px #16221dbb);
+}
+.filmMode .mastActions button:not(.experience):not(:last-child) {
+  display: none;
+}
+.filmMode .sceneDissolve,
+.filmMode .hudIn {
+  animation: none;
+}
+.filmShading {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    #101a17e8,
+    transparent 28%,
+    transparent 84%,
+    #14201c52
+  );
+}
+.prologue {
+  position: absolute;
+  inset: 0;
+}
+.prologue svg {
+  width: 100%;
+  height: 100%;
+}
+.maskTitle {
+  font:
+    650 111px/1 "Helvetica Neue",
+    Arial,
+    sans-serif;
+  letter-spacing: -7px;
+}
+.maskSee {
+  font:
+    italic 155px/1 Georgia,
+    serif;
+  letter-spacing: -9px;
+}
+.filmKicker,
+.filmCaption small,
+.evidenceRule,
+.filmEvidence small,
+.filmTime,
+.filmDeck small {
+  font-family: "SFMono-Regular", Menlo, monospace;
+  letter-spacing: 0.09em;
+}
+.filmKicker {
+  font-size: 12px;
+}
+.prologue > p {
+  position: absolute;
+  left: 5%;
+  bottom: 24%;
+  font-size: clamp(14px, 1.3vw, 22px);
+  letter-spacing: 0.07em;
+  color: #d4dcd2;
+}
+.filmCaption,
+.filmEvidence,
+.filmSignature {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 16%;
+  max-width: 44%;
+  text-shadow: 0 2px 18px #0b1815;
+}
+.filmCaption small,
+.evidenceRule {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.filmCaption h2,
+.filmSignature h1 {
+  font-size: clamp(34px, 5vw, 86px);
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+  margin: 0.21em 0;
+  font-weight: 500;
+  text-wrap: balance;
+}
+.filmCaption p,
+.filmEvidence p {
+  font-size: clamp(14px, 1.16vw, 20px);
+  line-height: 1.6;
+  margin: 0.6em 0;
+  letter-spacing: 0.025em;
+}
+.filmCaption.chapter2 {
+  left: auto;
+  right: var(--gutter);
+  text-align: right;
+}
+.filmCaption.chapter4 {
+  bottom: 29%;
+  width: 34%;
+}
+.filmEvidence {
+  width: min(330px, 35vw);
+  bottom: 18%;
+  padding: 16px 20px 17px 0;
+  background: linear-gradient(90deg, #182522ee, #182522d1 80%, transparent);
+  box-shadow: -20px 0 0 #182522ee;
+  text-shadow: none;
+}
+.evidenceRule {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #d2ddd16b;
+  padding-bottom: 8px;
+  color: #cee2c8;
+}
+.filmEvidence h2 {
+  font-size: clamp(25px, 2.7vw, 45px);
+  font-weight: 520;
+  line-height: 0.97;
+  letter-spacing: -0.045em;
+  margin: 0.36em 0 0.12em;
+}
+.filmEvidence i {
+  font:
+    italic clamp(14px, 1.2vw, 22px) Georgia,
+    serif;
+  color: #dddcc9;
+}
+.filmEvidence p {
+  font-size: 14px;
+}
+.evidenceScale {
+  display: flex;
+  gap: 5px;
+  margin-top: 14px;
+}
+.evidenceScale span {
+  border-top: 2px solid #76847c;
+  color: #b1bdb3;
+  flex: 1;
+  padding-top: 4px;
+  font:
+    10px Menlo,
+    monospace;
+}
+.evidenceScale span[data-active="true"] {
+  border-color: #faf0c8;
+  color: white;
+}
+.filmEvidence small {
+  font-size: 10px;
+}
+.filmSignature h1 {
+  font-size: clamp(80px, 13vw, 220px);
+  margin: 0;
+  line-height: 0.85;
+}
+.filmSignature p {
+  font:
+    italic clamp(24px, 2.7vw, 50px) Georgia,
+    serif;
+  margin: 0.3em 0;
+}
+.filmSplit {
+  position: absolute;
+  inset-block: 15% 18%;
+  border-left: 1px solid #fff9;
+}
+.filmSplit span {
+  position: absolute;
+  top: 2%;
+  left: 5px;
+  white-space: nowrap;
+  background: #1c2926db;
+  font-size: 11px;
+  padding: 5px;
+}
+.filmDeck {
+  position: absolute;
+  z-index: 2;
+  pointer-events: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px var(--gutter) 2.8vh;
+  background: linear-gradient(0deg, #15201efa, transparent);
+  color: #f4f2e4;
+}
+.filmChapters {
+  display: flex;
+  gap: 6px;
+}
+.filmChapters button {
+  position: relative;
+  padding: 0;
+  height: 18px;
+}
+.filmChapters button:before,
+.filmChapters b {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #a5b3a78a;
+}
+.filmChapters b {
+  right: auto;
+  background: #e7eacf;
+}
+.filmChapters [aria-current="step"]:before {
+  background: #b0bba8;
+}
+.filmTransport {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-height: 35px;
+}
+.filmTransport label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.filmTransport label span {
+  font: 11px Menlo;
+  color: #c1d6bd;
+}
+.filmTransport select {
+  color: inherit;
+  background: #20302bdd;
+  border: 0;
+  border-radius: 3px;
+  font:
+    500 14px "Helvetica Neue",
+    sans-serif;
+  padding: 5px;
+  cursor: pointer;
+}
+.filmTransport button {
+  padding: 7px;
+  color: inherit;
+}
+.filmTransport small {
+  font-size: 10px;
+  margin-left: auto;
+}
+.filmTime {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.filmTime em {
+  font-style: normal;
+  color: #c6d1c7;
+}
+.filmTransport input {
+  width: min(14vw, 165px);
+  accent-color: #d1ddc5;
+  height: 16px;
+}
+.filmTransport .filmPlay {
+  border: 1px solid #c1cebe70;
+  border-radius: 24px;
+  padding: 8px 15px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+@media (max-width: 650px) {
+  .filmCaption,
+  .filmEvidence {
+    max-width: 82%;
+    width: auto;
+    bottom: 18%;
+  }
+  .filmCaption.chapter4 {
+    width: 48%;
+  }
+  .filmEvidence {
+    width: 240px;
+  }
+  .filmTransport {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .filmTransport input {
+    width: 52px;
+  }
+  .filmTransport small {
+    display: none;
+  }
+  .filmTransport select {
+    font-size: 12px;
+    max-width: 130px;
+  }
+  .filmTransport .filmPlay {
+    margin-left: auto;
+  }
+  .prologue > p {
+    max-width: 56%;
+    bottom: 27%;
+  }
+  .filmSignature {
+    max-width: 80%;
+  }
+  .filmCaption h2 {
+    font-size: 36px;
+  }
+}
+.direction .signalGlyph {
+  width: 27px;
+  height: 21px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.direction[data-signal="stale"] {
+  border-left: 3px dashed #c8c1ab;
+}
+.direction[data-signal="limited"] {
+  border-left: 3px solid #bdc1b6;
+}

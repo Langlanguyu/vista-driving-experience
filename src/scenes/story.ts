@@ -1,0 +1,167 @@
+import { cfg, defaults, frame, type Controls } from "./corridor";
+import type { Scenario } from "../data/scenarios";
+import type { SceneState } from "../domain/types";
+
+export const filmDuration = 180;
+export const chapters = [
+  { start: 0, end: 15, title: "Prologue", cn: "序幕" },
+  { start: 15, end: 43, title: "The unseen", cn: "穿过遮挡" },
+  { start: 43, end: 75, title: "Beyond the frame", cn: "视野之外" },
+  { start: 75, end: 105, title: "When data fades", cn: "感知的边界" },
+  { start: 105, end: 135, title: "How light reaches you", cn: "从数据到视野" },
+  { start: 135, end: 163, title: "From simulation to reality", cn: "回到真实" },
+  { start: 163, end: 180, title: "What comes next", cn: "未来座舱" },
+] as const;
+export const clamp = (u: number) => Math.min(1, Math.max(0, u));
+export function smooth(value: number) {
+  const u = clamp(value);
+  return u * u * (3 - 2 * u);
+}
+export const ramp = (t: number, a: number, b: number) =>
+  smooth((t - a) / (b - a));
+const pulse = (t: number, a: number, b: number, c: number, d: number) =>
+  ramp(t, a, b) * (1 - ramp(t, c, d));
+
+// R5B receives stateless normalized chapter samples, including entry and exit poses.
+export function opticalScene(progress: number) {
+  return {
+    progress,
+    section: pulse(progress, 0.1, 0.4, 0.83, 1),
+    angle: 1.12 + 0.28 * ramp(progress, 0.32, 0.7),
+    dashboardReveal: pulse(progress, 0.21, 0.46, 0.84, 0.99),
+    opticalComponentVisibility: pulse(progress, 0.18, 0.42, 0.84, 0.98),
+    rayRevealProgress: pulse(progress, 0.11, 0.45, 0.85, 0.98),
+    virtualRayProgress: pulse(progress, 0.6, 0.77, 0.82, 0.96),
+    environmentFade: pulse(progress, 0.14, 0.52, 0.83, 0.99),
+    image: 1 - ramp(progress, 0.12, 0.25) + ramp(progress, 0.9, 1),
+  };
+}
+export function realityComparison(progress: number) {
+  return {
+    progress,
+    section: 0,
+    boundary: ramp(progress, 0.27, 0.47),
+    eyeX: 0.08 * pulse(progress, 0.56, 0.68, 0.75, 0.89),
+    wipe: 1 - ramp(progress, 0.42, 0.84),
+  };
+}
+export function cockpitFuture(progress: number) {
+  return {
+    progress,
+    exterior: 0,
+    console: pulse(progress, 0.14, 0.39, 0.65, 0.87),
+    signature: ramp(progress, 0.5, 0.83),
+  };
+}
+
+export function evidenceLevel(
+  s: SceneState,
+): "precise" | "estimated" | "directional" | "limited" | "stale" | "clear" {
+  if (s.decision.policy === "PERCEPTION_LIMITED")
+    return (s.network.communicationAge ?? 0) > cfg.maxAge ? "stale" : "limited";
+  if (s.decision.mode === "world") return "precise";
+  if (s.decision.mode === "region") return "estimated";
+  if (s.decision.mode === "direction") return "directional";
+  return "clear";
+}
+export function storyFrame(p: number) {
+  const sec = clamp(p) * filmDuration,
+    chapter = chapters.findIndex((c) => sec < c.end);
+  const index = chapter < 0 ? 6 : chapter,
+    c = chapters[index],
+    local = clamp((sec - c.start) / (c.end - c.start));
+  const optics = opticalScene(clamp((sec - 105) / 30)),
+    reality = realityComparison(clamp((sec - 135) / 28)),
+    future = cockpitFuture(clamp((sec - 163) / 17));
+  const study =
+    index === 4 ? optics.section : index === 5 ? reality.section : 0;
+  const opts: Controls = { ...defaults };
+  let scene: Scenario = "truck",
+    time = 2.4 * ramp(sec, 0, 24) + (65 / 12 - 2.4) * ramp(sec, 32, 43),
+    strength = 0;
+  if (index === 2) {
+    scene = "cross";
+    time = 3.2 * ramp(sec, 43, 52) + 4.9 * ramp(sec, 63, 74);
+    strength = -pulse(sec, 53, 59, 67, 72);
+  } else if (index === 3 || index === 4) {
+    scene = "degraded";
+    time =
+      4 +
+      2.65 * ramp(sec, 90, 95) +
+      1.55 * ramp(sec, 95, 100) +
+      3.6 * ramp(sec, 100, 105);
+    opts.qualityTimeline = false;
+    opts.fogOverride = ramp(sec, 78, 91) * (1 - ramp(sec, 100, 105));
+    opts.quality =
+      sec < 80 || sec >= 103.5
+        ? "high"
+        : sec < 85 || sec >= 102
+          ? "medium"
+          : "low";
+    opts.existenceOverride = sec >= 90 && sec < 100 ? 0.41 : null;
+  } else if (index >= 5) {
+    scene = "cross";
+    time = 3.2 + 1.9 * ramp(sec, 161, 175);
+    strength = -pulse(sec, 135, 136, 158, 163);
+  }
+  const s = frame(time, opts, scene, "left", strength < -0.001);
+  const outside = 1 - ramp(sec, 2, 14),
+    side = pulse(sec, 30, 36, 38, 43);
+  const exit = future.exterior;
+  const eye = { ...s.camera.eye };
+  if (index === 5)
+    eye.north +=
+      (38 + 11.8 * cfg.egoSpeed - eye.north) * (1 - ramp(sec, 135, 139));
+  eye.east += 0.14 * future.console;
+  eye.up -= 0.05 * future.console;
+  eye.north += 0.12 * future.console;
+  eye.east -= outside * 3.9 + side * 5.8 + exit * 4.9;
+  eye.north += -outside * 6.6 + side * 9.3 - exit * 7.2;
+  eye.up += outside * 1.8 + side * 2.15 + exit * 1.2;
+  s.camera = {
+    ...s.camera,
+    eye,
+    yaw: future.console * 0.31 + outside * 0.32 + side * 0.3 + exit * 0.39,
+    pitch:
+      s.camera.pitch -
+      future.console * 0.24 -
+      outside * 0.15 -
+      side * 0.13 -
+      exit * 0.09,
+  };
+  const reveal = pulse(sec, 30, 33, 38, 41);
+  const xrayAmount =
+    index === 1 ? pulse(sec, 23, 26, 30, 31) : index === 3 ? 1 : 0;
+  const cabinOpacity =
+    (1 - ramp(outside, 0.015, 0.15)) *
+    (1 - ramp(side, 0.015, 0.17)) *
+    (1 - ramp(exit, 0.01, 0.15));
+  return {
+    s,
+    sec,
+    crossingType: pulse(sec, 65.2, 67.3, 71.4, 73.4),
+    chapter: index,
+    local,
+    strength,
+    reveal,
+    xray: xrayAmount > 0,
+    xrayAmount,
+    hud:
+      index === 1
+        ? sec >= 23 && sec < 40
+        : index === 2
+          ? sec > 47
+          : index === 3,
+    cockpit: cabinOpacity > 0,
+    cabinOpacity,
+    exterior: outside > 0.16 || exit > 0.16,
+    study,
+    studyAngle: index === 4 ? optics.angle : 1,
+    optics,
+    reality,
+    future,
+    wipe: index === 5 && sec >= 136 ? reality.wipe : 1,
+    evidence: evidenceLevel(s),
+  };
+}
+export type StorySample = ReturnType<typeof storyFrame>;

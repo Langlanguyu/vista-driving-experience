@@ -1,0 +1,24 @@
+VISTA · asset credits
+
+Cargo: “tata bangladashi truck”, taeemtasbi (also credited by the distribution project as MD. NAHID HASAN).
+https://sketchfab.com/3d-models/tata-bangladashi-truck-1d46922d2a0b4aa688349dd005fe5ee1
+CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+Repacked, resized, simplified, recoloured, original scene markings added. Attribution and licence taken from the original GLB's asset.extras.
+
+Car Concept: © 2024 Darmstadt Graphics Group GmbH. Model and textures by Eric Chadwick.
+Underlying concept model by Unity Fan (CC0). © 2015 and 2017 Khronos Group for the Khronos and 3D Commerce logos.
+https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/
+Repacked, texture sizes reduced, mesh simplified, scale/orientation adjusted, interior reused. Marks remain subject to their owners' trademark rights.
+
+Poly Haven — modular_urban_apartments_facade, tree_small_02, asphalt_04,
+brick_wall_001, concrete_floor_02, decor_shop, industrial_sunset_02_puresky, modern_buildings_2.
+CC0 — https://polyhaven.com/license
+Facade modules selected, tree simplified and canopy baked, maps recompressed.
+ambientCG — Facade018A, CC0 — https://ambientcg.com/a/Facade018A
+All models, textures and lighting are served locally. Street design, bridge, scene signs and simulation UI are original to VISTA.
+
+Round 3 daylight sky: Poly Haven, Kloofendal 48d Partly Cloudy (Pure Sky), 1K HDR.
+https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
+CC0 — https://polyhaven.com/license
+New cockpit, windshield, instrument graphics and box body fitted to the credited cargo chassis are original scene additions.
