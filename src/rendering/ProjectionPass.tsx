@@ -15,6 +15,7 @@ export function ProjectionPass({
   cockpitFov,
   study = 0,
   wipe = 1,
+  opening = -1,
   cabinOpacity = 1,
 }: {
   strength: number;
@@ -27,11 +28,14 @@ export function ProjectionPass({
     virtual: number;
     vid: number;
     console: number;
+    film: boolean;
+    bench: ReturnType<typeof import("../domain/opticalRayTracer").opticalBench>;
   };
   compare: number;
   cockpitLayer: T.Scene;
   cabinOn: boolean;
   cockpitFov: number;
+  opening?: number;
   study?: number;
   wipe?: number;
   cabinOpacity?: number;
@@ -59,6 +63,7 @@ export function ProjectionPass({
       cabin: { value: cabinTarget.texture },
       hasCabin: { value: 0 },
       studio: { value: 0 },
+      opening: { value: -1 },
       wipe: { value: 1 },
       hTan: { value: 1 },
       isolate: {
@@ -78,7 +83,7 @@ export function ProjectionPass({
       depthWrite: false,
       vertexShader:
         "varying vec2 v; void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}",
-      fragmentShader: `varying vec2 v; uniform sampler2D source,cabin,lattice; uniform float isolate,hasCabin,hTan,studio,wipe; uniform vec2 edges; uniform float power,compare;
+      fragmentShader: `varying vec2 v; uniform sampler2D source,cabin,lattice; uniform float isolate,hasCabin,hTan,studio,wipe,opening; uniform vec2 edges; uniform float power,compare;
       vec4 sampleScene(float x,float y,float a){
         vec2 cabinUV=vec2(.5+.5*x,y);
         vec2 grid=texture2D(lattice,(cabinUV*vec2(128.,64.)+.5)/vec2(129.,65.)).rg;
@@ -87,6 +92,14 @@ export function ProjectionPass({
         vec3 world=texture2D(source,vec2((raw-edges.x)/(edges.y-edges.x),y)).rgb*(1.-isolate);
         float light=exp(-2.8*length(vec2(x-.28,1.3*(cabinUV.y-.57))));
         world=mix(world,vec3(.012,.022,.021)+vec3(.075,.099,.091)*light,studio);
+        if(opening>=0.){
+          vec2 center=vec2(.5,.51);
+          float distanceToRoad=length((cabinUV-center)*vec2(.85,1.2));
+          float radius=mix(-.16,1.,smoothstep(6.4,10.9,opening));
+          float ink=smoothstep(radius-.09,radius+.09,distanceToRoad);
+          vec3 studioLight=vec3(.008,.011,.010)+vec3(.034,.039,.034)*exp(-3.*distanceToRoad);
+          world=mix(world,studioLight,ink);
+        }
         vec4 interior=texture2D(cabin,cabinUV)*hasCabin;
         return vec4(world*(1.-interior.a)+interior.rgb,1.);
       }
@@ -162,6 +175,7 @@ export function ProjectionPass({
     gl.render(scene, c);
     pass.uniforms.hasCabin.value = cabinOn ? cabinOpacity : 0;
     pass.uniforms.studio.value = study;
+    pass.uniforms.opening.value = opening;
     pass.uniforms.wipe.value = wipe;
     if (cabinOn) {
       // Cockpit is driver-local, independent of world fog, nonlinear rays and reveal zoom.
@@ -174,19 +188,43 @@ export function ProjectionPass({
       cc.rotation.set(cfg.pitch, 0, 0);
       const { section, orbit, virtual, vid, console: detail } = opticalView;
       if (section > 0) {
-        const distance = 1.15 + virtual * vid * 0.76;
+        const b = opticalView.bench;
+        const bounds = new T.Box3().setFromPoints([
+          b.emitter.center,
+          b.mirror1.center,
+          b.mirror2.center,
+          b.glass.center,
+          b.eye.center,
+        ]);
+        const extent = bounds.getSize(new T.Vector3());
+        const halfAngle = T.MathUtils.degToRad(cc.fov / 2);
+        const fitted =
+          1.23 *
+          Math.max(
+            (extent.y + 0.25) / (2 * Math.tan(halfAngle)),
+            (extent.z + 0.26) / (2 * Math.tan(halfAngle) * cc.aspect),
+          );
+        const distance = opticalView.film
+          ? fitted + 0.52 * virtual
+          : 1.15 + virtual * vid * 0.76;
         const target = new T.Vector3(
           0,
           -0.28 + 0.15 * virtual,
           -0.68 - virtual * vid * 0.37,
         );
+        if (opticalView.film) {
+          bounds.getCenter(target);
+          target.z -= virtual * 0.36;
+        }
         const position = target
           .clone()
           .add(
             new T.Vector3(
-              Math.sin(orbit) * distance,
+              Math.sin(orbit - (opticalView.film ? virtual * 1.12 : 0)) *
+                distance,
               0.23 + virtual * 0.5,
-              Math.cos(orbit) * distance,
+              Math.cos(orbit - (opticalView.film ? virtual * 1.12 : 0)) *
+                distance,
             ),
           );
         cc.position.lerp(position, section);

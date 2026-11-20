@@ -7,6 +7,7 @@ test("five real HUD representations, chapter seeks, restart and reversible Lab d
     film = page.locator(".film"),
     range = page.getByLabel("影片时间");
   await expect(view).toHaveAttribute("data-ready", "true");
+  await page.getByLabel("探索时间轴").click();
   const canvas = await page.locator("canvas").elementHandle();
   for (const [sec, level, mode] of [
     [77, "precise", "world"],
@@ -44,6 +45,7 @@ test("five real HUD representations, chapter seeks, restart and reversible Lab d
   await page.getByRole("button", { name: "STORY EXPERIENCE" }).click();
   await expect(view).toHaveAttribute("data-strength", "-1.0000");
   await expect(view).toHaveAttribute("data-eye", eye!);
+  await page.getByLabel("探索时间轴").click();
   await page.getByLabel("故事章节").selectOption("4");
   await expect(film).toHaveAttribute("data-chapter", "4");
   await range.fill("126");

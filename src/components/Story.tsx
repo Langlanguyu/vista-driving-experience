@@ -7,8 +7,7 @@ import {
   type StorySample,
 } from "../scenes/story";
 import "../styles/story.css";
-const stamp = (s: number) =>
-  Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+
 const levels = {
   precise: [
     "A",
@@ -71,64 +70,16 @@ function Evidence({ shot }: { shot: StorySample }) {
   );
 }
 function Prologue({ sec }: { sec: number }) {
-  const u = ramp(sec, 3, 14),
-    a = 1 - ramp(sec, 7, 13);
   return (
-    <div
-      className="prologue"
-      aria-label="What you can’t see."
-      style={{ opacity: 1 - ramp(sec, 12.5, 15) }}
-    >
-      <svg viewBox="0 0 1200 760" preserveAspectRatio="none" aria-hidden="true">
-        <defs>
-          <mask id="film-aperture">
-            <rect width="1200" height="760" fill="white" />
-            <path
-              d={`M ${707 - 1130 * u} 0 H1200 V760 H${535 - 1130 * u} Z`}
-              fill="black"
-            />
-            <text
-              x="54"
-              y="502"
-              className="maskSee"
-              transform={`translate(${-100 * u} 0) scale(${1 + 1.4 * u})`}
-              fill="black"
-            >
-              SEE.
-            </text>
-          </mask>
-        </defs>
-        <rect
-          width="1200"
-          height="760"
-          fill="#18231f"
-          mask="url(#film-aperture)"
-        />
-        <g opacity={a} fill="#eeeede" transform={`translate(0 ${-40 * u})`}>
-          <text x="60" y="165" className="filmKicker">
-            VISTA　 /　 INTERACTIVE DRIVING FILM
-          </text>
-          <text x="53" y="275" className="maskTitle">
-            WHAT YOU
-          </text>
-          <text x="53" y="377" className="maskTitle">
-            CAN’T
-          </text>
-        </g>
-        <text
-          x="54"
-          y="502"
-          className="maskSee"
-          transform={`translate(${-100 * u} 0) scale(${1 + 1.4 * u})`}
-          fill="none"
-          stroke="#e8e9d9"
-          strokeWidth="1.6"
-          opacity={a}
-        >
-          SEE.
-        </text>
-      </svg>
-      <p style={{ opacity: a }}>当危险被挡住，驾驶员还能看见什么？</p>
+    <div className="openingLetterpress" aria-label="WHAT YOU CAN’T SEE.">
+      <small style={{ opacity: 1 - ramp(sec, 3, 6) }}>
+        VISTA　 /　 A DRIVING FILM
+      </small>
+      <strong
+        style={{ opacity: ramp(sec, 10, 11.8) * (1 - ramp(sec, 13.2, 15)) }}
+      >
+        V I S T A
+      </strong>
     </div>
   );
 }
@@ -136,7 +87,7 @@ function FilmCaption({ shot }: { shot: StorySample }) {
   const { chapter: k, sec } = shot;
   if (k === 0) return <Prologue sec={sec} />;
   if (k === 3) return <Evidence shot={shot} />;
-  if (k === 6 && sec >= 172)
+  if (k === 6 && sec >= 170)
     return (
       <div
         className="filmSignature"
@@ -192,8 +143,8 @@ function FilmCaption({ shot }: { shot: StorySample }) {
   } else if (k === 4) {
     const shots: [string, string, string, number][] = [
       [
-        "How does it reach your eyes?",
-        "前方箭头的光从哪里来？",
+        "The light behind the image.",
+        "The image is virtual. The light is real.",
         "THE LIGHT BEHIND THE IMAGE",
         105,
       ],
@@ -231,26 +182,28 @@ function FilmCaption({ shot }: { shot: StorySample }) {
     [title, cn, tag, start] = shots.filter((v) => sec >= v[3]).at(-1)!;
   } else if (k === 5) {
     [title, cn, tag, start] =
-      sec < 146
+      sec < 146.8
         ? [
-            "Digital field.",
-            "数字仿真可以重映射外部街景。",
-            "SIMULATION / DISPLAY",
-            135,
+            "How much can a real HUD show?",
+            "道路铺满视野，虚像只占眼前的一小块。",
+            "DISPLAY FIELD",
+            136,
           ]
         : [
-            "Physical view.",
-            "框内是虚像面的角范围。移动眼点越过眼盒，导航光束退出；眼点返回后恢复。",
-            "DISPLAY BOUNDARY",
-            146,
+            "Precision has boundaries.",
+            "眼点回到眼盒，虚像重新出现。",
+            "EYEBOX",
+            146.8,
           ];
-  } else
+  } else {
+    if (sec >= 163) return null;
     [title, cn, tag, start] = [
-      "Connected sight.",
-      "左前方来车。中控地图根据同一条路侧观测标出车辆与交叉口。",
+      "One more perspective.",
+      "风挡提示来车方向，中控保留路口全貌。",
       "FUTURE COCKPIT",
-      163,
+      151,
     ];
+  }
   const entrance = ramp(sec, start, start + 0.8);
   return (
     <section
@@ -272,14 +225,22 @@ export function Story({
   shot,
   change,
   enter,
+  ready,
+  auto,
+  setAuto,
+  sound,
 }: {
   progress: number;
   shot: StorySample;
   change: (p: number) => void;
   enter: () => void;
+  ready: boolean;
+  auto: boolean;
+  setAuto: (v: boolean) => void;
+  sound: React.ReactNode;
 }) {
-  const scroll = useRef<HTMLDivElement>(null),
-    [auto, setAuto] = useState(false);
+  const scroll = useRef<HTMLDivElement>(null);
+  const [explore, setExplore] = useState(false);
   const position = useRef(progress);
   position.current = progress;
   const initial = useRef(progress);
@@ -313,19 +274,36 @@ export function Story({
     return () => ro.disconnect();
   }, []);
   useEffect(() => {
-    if (!auto) return;
-    const from = position.current,
-      start = performance.now();
+    if (!auto || !ready) return;
+    let previous = performance.now();
     let id = 0;
     const tick = (now: number) => {
-      const next = clamp(from + (now - start) / (filmDuration * 1000));
+      const next = clamp(
+        position.current + Math.max(0, now - previous) / (filmDuration * 1000),
+      );
+      previous = now;
       write(next);
       if (next < 1) id = requestAnimationFrame(tick);
       else setAuto(false);
     };
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
-  }, [auto, change]);
+  }, [auto, change, ready]);
+  useEffect(() => {
+    const el = scroll.current!;
+    const wheel = (e: WheelEvent) => {
+      if (!ready || e.ctrlKey) return;
+      e.preventDefault();
+      const unit =
+        e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1;
+      seek(
+        position.current +
+          (e.deltaY * unit) / Math.max(1, el.scrollHeight - el.clientHeight),
+      );
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => el.removeEventListener("wheel", wheel);
+  }, [ready, change, setAuto]);
   const toggle = () => {
     if (position.current >= 1) write(0);
     setAuto(!auto);
@@ -336,7 +314,7 @@ export function Story({
       className="film"
       data-chapter={shot.chapter}
       data-seconds={shot.sec.toFixed(3)}
-      data-playing={auto}
+      data-playing={auto && ready}
     >
       <div
         ref={scroll}
@@ -352,7 +330,6 @@ export function Story({
             change(clamp(el.scrollTop / (el.scrollHeight - el.clientHeight)));
           }
         }}
-        onWheel={() => setAuto(false)}
         onTouchStart={() => setAuto(false)}
         onKeyDown={(e) => {
           if (e.key === " ") {
@@ -365,92 +342,83 @@ export function Story({
       </div>
       <div className="filmShading" />
       <FilmCaption shot={shot} />
-      {shot.chapter === 5 && shot.wipe > 0 && shot.wipe < 1 && (
-        <div className="filmSplit" style={{ left: 100 * shot.wipe + "%" }}>
-          <span>数字扩展　/　原始前视</span>
+      {ready && (
+        <footer className="cutDeck">
+          <span className="chapterName">
+            {shot.sec >= 167 ? "Finale" : c.title}
+          </span>
+          <nav aria-label="章节跳转">
+            {chapters.map((ch, i) => (
+              <button
+                key={ch.start}
+                title={ch.title}
+                aria-label={ch.title}
+                aria-current={shot.chapter === i ? "step" : undefined}
+                onClick={() => write(ch.start / filmDuration)}
+              >
+                <i />
+              </button>
+            ))}
+          </nav>
+          {sound}
+          <button onClick={toggle} aria-label={auto ? "暂停叙事" : "自动播放"}>
+            {auto ? "Ⅱ" : "▶"}
+          </button>
+          <button
+            aria-expanded={explore}
+            aria-label="探索时间轴"
+            onClick={() => setExplore(!explore)}
+          >
+            ···
+          </button>
+          <button onClick={enter}>LIVE LAB ↗</button>
+          {explore && (
+            <div className="exploreStrip">
+              <select
+                aria-label="故事章节"
+                value={shot.chapter}
+                onChange={(e) =>
+                  seek(chapters[+e.target.value].start / filmDuration)
+                }
+              >
+                {chapters.map((ch, i) => (
+                  <option value={i} key={i}>
+                    {ch.title}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="range"
+                aria-label="影片时间"
+                min="0"
+                max="180"
+                step=".05"
+                value={shot.sec}
+                onChange={(e) => seek(+e.target.value / filmDuration)}
+              />
+              <button
+                aria-label="重看本章"
+                onClick={() => seek(c.start / filmDuration)}
+              >
+                ↶
+              </button>
+            </div>
+          )}
+        </footer>
+      )}
+      {shot.sec >= 179.98 && (
+        <div className="filmEnd">
+          <button
+            onClick={() => {
+              write(0);
+              setAuto(true);
+            }}
+          >
+            REPLAY STORY
+          </button>
+          <button onClick={enter}>ENTER LIVE LAB ↗</button>
         </div>
       )}
-      <footer className="filmDeck">
-        <div className="filmChapters" aria-label="章节跳转">
-          {chapters.map((ch, i) => (
-            <button
-              key={ch.start}
-              style={{ flex: ch.end - ch.start }}
-              onClick={() => seek(ch.start / filmDuration)}
-              aria-label={ch.title}
-              aria-current={shot.chapter === i ? "step" : undefined}
-            >
-              <b
-                style={{
-                  width:
-                    100 * clamp((shot.sec - ch.start) / (ch.end - ch.start)) +
-                    "%",
-                }}
-              />
-            </button>
-          ))}
-        </div>
-        <div className="filmTransport">
-          <label>
-            <span>{String(shot.chapter).padStart(2, "0")}</span>
-            <select
-              aria-label="故事章节"
-              value={shot.chapter}
-              onChange={(e) =>
-                seek(chapters[+e.target.value].start / filmDuration)
-              }
-            >
-              {chapters.map((ch, i) => (
-                <option key={ch.start} value={i}>
-                  {ch.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            onClick={() => seek(c.start / filmDuration)}
-            aria-label="重看本章"
-            title="重看本章"
-          >
-            ↶
-          </button>
-          <span className="filmTime">
-            {stamp(shot.sec)} <em>/ 3:00</em>
-          </span>
-          <input
-            type="range"
-            aria-label="影片时间"
-            min="0"
-            max="180"
-            step=".05"
-            value={shot.sec}
-            onChange={(e) => seek(+e.target.value / filmDuration)}
-          />
-          <small>滚动探索</small>
-          {shot.sec >= 179.98 ? (
-            <>
-              <button
-                className="filmPlay"
-                onClick={() => {
-                  write(0);
-                  setAuto(true);
-                }}
-              >
-                REPLAY STORY
-              </button>
-              <button onClick={enter}>ENTER LIVE LAB ↗</button>
-            </>
-          ) : (
-            <button
-              className="filmPlay"
-              onClick={toggle}
-              aria-label={auto ? "暂停叙事" : "自动播放"}
-            >
-              {auto ? "Ⅱ　暂停" : "▶　播放影片"}
-            </button>
-          )}
-        </div>
-      </footer>
     </div>
   );
 }

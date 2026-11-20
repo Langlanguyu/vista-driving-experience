@@ -165,9 +165,9 @@ test("optical inspection, boundary and center display are reversible and restore
   assert.equal(at(105).optics.image, 1);
   assert.equal(at(122).optics.dashboardReveal, 1);
   assert.ok(at(128).optics.virtualRayProgress > 0.85);
-  assert.equal(at(135).optics.section, 0);
-  assert.ok(at(155).reality.eyeX > 0.065);
-  assert.ok(at(171).future.console > 0.95);
+  assert.equal(at(136).optics.section, 0);
+  assert.ok(at(146.5).reality.eyeX > 0.065);
+  assert.ok(at(156).future.console > 0.95);
   assert.equal(at(180).future.console, 0);
   assert.equal(at(180).cabinOpacity, 1);
   const a = at(126);

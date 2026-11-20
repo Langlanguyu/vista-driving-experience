@@ -12,7 +12,7 @@ try {
     deviceScaleFactor: 1,
   });
   await page.goto(
-    (process.env.VISTA_URL ?? "http://127.0.0.1:4173") + "/?benchmark",
+    (process.env.VISTA_URL ?? "http://127.0.0.1:4173") + "/?lab&benchmark",
   );
   await page.locator("[data-ready=true]").waitFor({ timeout: 45000 });
   await page.getByRole("button", { name: "展开控制台" }).click();

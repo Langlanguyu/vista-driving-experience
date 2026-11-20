@@ -2,6 +2,12 @@
 
 大学课程用协同感知 AR-HUD 仿真。Live Lab 提供货车遮挡、路口横穿和雨雾衰减三个 12 秒场景。Story Experience 通过滚动或自动播放驱动同一座城市中的七章、180 秒影片。所有场景、模型、字体回退和观测均在本机运行。
 
+## Cinematic Final Cut
+
+默认入口在街区资源载入后自动播放 180 秒 Story。点击 ENABLE SOUND 从当前镜头开启原创配乐。七个章节点可跳转，空格暂停，滚轮可逐帧探索，底部「···」展开精确定位。结束时可重播或进入 Live Lab。链接参数 `?lab` 直接进入驾驶实验室，`?quality=low` 使用低成本字形遮罩。
+
+[原创声音与授权](docs/audio-credits.md) · [视觉参考实察](docs/r6-reference-audit.md)
+
 ## 本地启动
 
 在项目目录运行（已验证 Node 26.13.1、npm 11.20.0）：
@@ -51,9 +57,9 @@ Playwright 在此机使用已有 Google Chrome，其他机器可指定 CHROME_PA
 
 ## Preview 发布与离线包
 
-- 公开网站 https://langlanguyu.github.io/vista-driving-experience/
+- [R6 成片](https://langlanguyu.github.io/vista-driving-experience/r6/) · [稳定 Preview](https://langlanguyu.github.io/vista-driving-experience/) · [R6 验收](docs/round6-verification.md)
 - 仓库 https://github.com/Langlanguyu/vista-driving-experience
 - main 分支推送后由 .github/workflows/deploy.yml 自动构建并部署 Pages。
-- npm run package:offline 在 macOS 上生成 release/vista-preview-v1.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
+- npm run package:offline 在 macOS 上生成 release/vista-r6-final-cut.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
 - Vite 使用相对 base，模型、贴图、HDR 与署名通过 BASE_URL 加载，适配 Pages 仓库子路径与独立离线目录。
 - 历史截图、录屏、参考原件和压缩包保留在本地，Git 忽略这些大文件。更新时提交源码与 public 资产即可。

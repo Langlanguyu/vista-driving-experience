@@ -1,4 +1,5 @@
-import {assetUrl} from "../utils/assetUrl";
+import { AudioDirector } from "./AudioDirector";
+import { assetUrl } from "../utils/assetUrl";
 import { scenarios, type Scenario, type Side } from "../data/scenarios";
 import { Story } from "../components/Story";
 import { useSceneController } from "./useSceneController";
@@ -56,6 +57,7 @@ function App() {
     d,
     enterLab,
     returnToLab,
+
     enterScene,
     startStory,
     setPerceptionState,
@@ -68,6 +70,57 @@ function App() {
     [power, setPower] = useState(1),
     [opticalOpen, openOptical] = useState(false),
     [optical, setOptical] = useState(opticalDefaults);
+  const [ready, setReady] = useState(false),
+    [auto, setAuto] = useState(true);
+  const [audible, setAudible] = useState(false),
+    [volume, setVolume] = useState(0.62),
+    [audioError, setAudioError] = useState("");
+  const [director] = useState(() => new AudioDirector(setAudible));
+  const [visible, setVisible] = useState(!document.hidden);
+  useEffect(() => {
+    const update = () => setVisible(!document.hidden);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      document.removeEventListener("visibilitychange", update);
+      director.close();
+    };
+  }, [director]);
+  useEffect(() => {
+    director.sync(
+      story ? "story" : "lab",
+      scroll * 180,
+      ready && visible && (!story || (auto && scroll < 1)),
+    );
+  }, [director, ready, visible, story, auto, scroll]);
+  const sound = (
+    <span className="soundControl">
+      <button
+        aria-pressed={audible}
+        title={audioError || "声音"}
+        onClick={() => {
+          if (audible) director.mute();
+          else void director.enable().catch((e) => setAudioError(String(e)));
+        }}
+      >
+        {audible ? "SOUND ON" : "ENABLE SOUND"}
+      </button>
+      {audible && (
+        <input
+          aria-label="音量"
+          type="range"
+          min="0"
+          max="1"
+          step=".02"
+          value={volume}
+          onChange={(e) => {
+            setVolume(+e.target.value);
+            director.volume(+e.target.value);
+          }}
+        />
+      )}
+      {audioError && !audible && <small role="status">{audioError}</small>}
+    </span>
+  );
   const labOptical = !story && opticalOpen;
   const root = useRef<HTMLElement>(null),
     dialog = useRef<HTMLDialogElement>(null);
@@ -84,6 +137,7 @@ function App() {
   return (
     <main ref={root} className={story ? "filmMode" : undefined}>
       <Drive
+        loaded={setReady}
         s={s}
         projection={story ? researchDefaults : projection}
         optical={labOptical ? optical : null}
@@ -102,66 +156,73 @@ function App() {
         exterior={shot?.exterior ?? false}
         xray={shot?.xray ?? true}
       />
-      <header className="mast">
-        <div className="brandMark" aria-label="VISTA">
-          <svg width="30" height="25" viewBox="0 0 33 26">
-            <path
-              d="M0 2h7l9 16L26 2h7L16 26zM12 2h9l-4.5 8z"
-              fill="currentColor"
-            />
-          </svg>
-          <strong>VISTA</strong>
-        </div>
-        <div className="mastActions">
-          <button
-            className="experience"
-            aria-pressed={story}
-            onClick={story ? returnToLab : startStory}
-          >
-            {story ? "LIVE LAB ↗" : "STORY EXPERIENCE"}
-          </button>
-          {!story && (
+      {!story && (
+        <header className="mast">
+          <div className="brandMark" aria-label="VISTA">
+            <svg width="30" height="25" viewBox="0 0 33 26">
+              <path
+                d="M0 2h7l9 16L26 2h7L16 26zM12 2h9l-4.5 8z"
+                fill="currentColor"
+              />
+            </svg>
+            <strong>VISTA</strong>
+          </div>
+          <div className="mastActions">
+            {sound}
             <button
               className="experience"
-              aria-pressed={labOptical}
-              onClick={() => {
-                openOptical(!opticalOpen);
-                play(false);
-              }}
+              aria-pressed={story}
+              onClick={startStory}
             >
-              OPTICAL LAB
+              {story ? "LIVE LAB ↗" : "STORY EXPERIENCE"}
             </button>
-          )}
-          {!story && (
-            <select
-              aria-label="驾驶场景"
-              value={scene}
-              onChange={(e) => {
-                openOptical(false);
-                enterScene(e.target.value as Scenario);
-              }}
-            >
-              {Object.entries(scenarios).map(([id, sc], i) => (
-                <option key={id} value={id}>
-                  0{i + 1}　{sc.name}
-                </option>
-              ))}
-            </select>
-          )}
-          <button aria-label="技术说明" onClick={() => setModal("info")}>
-            <Icon name="info" size={17} />
-          </button>
-          <button aria-label="全屏切换" onClick={fullscreen}>
-            <Icon name="expand" size={16} />
-          </button>
-        </div>
-      </header>
+            {!story && (
+              <button
+                className="experience"
+                aria-pressed={labOptical}
+                onClick={() => {
+                  openOptical(!opticalOpen);
+                  play(false);
+                }}
+              >
+                OPTICAL LAB
+              </button>
+            )}
+            {!story && (
+              <select
+                aria-label="驾驶场景"
+                value={scene}
+                onChange={(e) => {
+                  openOptical(false);
+                  enterScene(e.target.value as Scenario);
+                }}
+              >
+                {Object.entries(scenarios).map(([id, sc], i) => (
+                  <option key={id} value={id}>
+                    0{i + 1}　{sc.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button aria-label="技术说明" onClick={() => setModal("info")}>
+              <Icon name="info" size={17} />
+            </button>
+            <button aria-label="全屏切换" onClick={fullscreen}>
+              <Icon name="expand" size={16} />
+            </button>
+          </div>
+        </header>
+      )}
       {story && shot && (
         <Story
+          ready={ready && visible}
+          auto={auto}
+          setAuto={setAuto}
+          sound={sound}
           progress={scroll}
           shot={shot}
           change={setScroll}
-          enter={enterLab}
+          enter={scroll >= 1 ? enterLab : returnToLab}
         />
       )}
       {labOptical && (
@@ -473,7 +534,11 @@ function App() {
             <p className="muted">
               车辆模型：taeemtasbi（Tata 货车）、Eric Chadwick / Darmstadt
               Graphics Group（Car Concept）。材质与街景组件：Poly Haven。
-              <a href={assetUrl("credits.txt")} target="_blank" rel="noreferrer">
+              <a
+                href={assetUrl("credits.txt")}
+                target="_blank"
+                rel="noreferrer"
+              >
                 资产与许可
               </a>
             </p>

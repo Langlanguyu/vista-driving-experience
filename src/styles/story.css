@@ -341,3 +341,174 @@
 .direction[data-signal="limited"] {
   border-left: 3px solid #bdc1b6;
 }
+.openingLetterpress {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.openingLetterpress small {
+  position: absolute;
+  top: 18%;
+  font:
+    500 10px/1.5 Menlo,
+    monospace;
+  letter-spacing: 0.26em;
+  color: #cecfc3;
+}
+.openingLetterpress strong {
+  font:
+    500 clamp(28px, 5vw, 90px) / 1 Helvetica,
+    sans-serif;
+  text-shadow: 0 2px 18px #12231d;
+}
+.cutDeck {
+  position: absolute;
+  z-index: 3;
+  pointer-events: auto;
+  bottom: max(18px, 3vh);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 13px;
+  border-radius: 20px;
+  background: #16201ec9;
+  color: #f1efe4;
+  white-space: nowrap;
+}
+.cutDeck button,
+.soundControl button,
+.filmEnd button {
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font:
+    600 10px/1.35 "Helvetica Neue",
+    sans-serif;
+  letter-spacing: 0.075em;
+  padding: 7px 4px;
+}
+.cutDeck .chapterName {
+  font:
+    italic 14px Georgia,
+    serif;
+}
+.cutDeck nav {
+  display: flex;
+}
+.cutDeck nav button {
+  width: 15px;
+  padding: 7px 3px;
+}
+.cutDeck nav i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #929b92;
+}
+.cutDeck nav [aria-current] i {
+  background: #f1f0d6;
+  box-shadow: 0 0 0 2px #dfdfbd3b;
+}
+.exploreStrip {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #202b27;
+  padding: 7px 12px;
+  border-radius: 6px;
+}
+.exploreStrip input {
+  width: min(25vw, 220px);
+}
+.soundControl {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+.soundControl input {
+  width: 48px;
+  accent-color: #c1ccbc;
+}
+.soundControl small {
+  position: absolute;
+  bottom: 100%;
+  background: #28332d;
+}
+.filmEnd {
+  pointer-events: auto;
+  position: absolute;
+  left: var(--gutter);
+  bottom: 11%;
+  z-index: 2;
+  display: flex;
+  gap: 15px;
+}
+.filmEnd button {
+  border-bottom: 1px solid #c9cfc4;
+}
+.filmSignature h1 {
+  font-size: clamp(58px, 7.8vw, 140px);
+}
+.filmSignature p {
+  font-size: clamp(20px, 1.8vw, 32px);
+}
+.filmCaption.chapter4 {
+  bottom: 12%;
+  width: 30%;
+}
+.filmCaption.chapter4 h2 {
+  font-size: clamp(25px, 3.2vw, 54px);
+}
+.boundaryCue {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font:
+    500 12px/1.6 Menlo,
+    monospace;
+  letter-spacing: 0.06em;
+  color: white;
+  text-shadow: 0 1px 5px #14201b;
+}
+.filmMode .loading {
+  z-index: 5;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  transform: none;
+  background: #18201e;
+  display: grid;
+  align-content: center;
+  text-align: center;
+  letter-spacing: 0.2em;
+}
+@media (max-width: 650px) {
+  .cutDeck {
+    gap: 4px;
+    max-width: 98vw;
+  }
+  .cutDeck .chapterName {
+    display: none;
+  }
+  .cutDeck nav button {
+    width: 12px;
+  }
+  .soundControl input {
+    width: 37px;
+  }
+  .filmCaption.chapter4 {
+    width: 55%;
+  }
+}

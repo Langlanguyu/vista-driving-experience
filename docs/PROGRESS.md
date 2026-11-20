@@ -25,3 +25,7 @@ R5 从雨雾预设的状态变化入手，保持已验证的降级与恢复，�
 ## Preview v1 快速发布
 
 当前版本进入发布打包，功能开发暂停于 R5B 完成态。新增 Pages 工作流、子路径资源支持与 macOS 通用离线服务。后续 R5B/R6 继续使用当前源码与时间轴。[发布说明](deployment.md)
+
+## R6 Cinematic Final Cut
+
+默认进入 180 秒影片，统一时钟等待场景就绪，支持静音自动播放、字形空间解构、光机剖面、有限视场、中控特写与路口收尾。Story 与 Lab 各有本地原创音轨。开发分支 r6-cinematic-final-cut，Preview 与 R6 分路径发布。镜头、音频及真机采样见 [本轮验收](round6-verification.md)。

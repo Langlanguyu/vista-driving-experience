@@ -5,12 +5,12 @@ import type { SceneState } from "../domain/types";
 export const filmDuration = 180;
 export const chapters = [
   { start: 0, end: 15, title: "Prologue", cn: "序幕" },
-  { start: 15, end: 43, title: "The unseen", cn: "穿过遮挡" },
-  { start: 43, end: 75, title: "Beyond the frame", cn: "视野之外" },
+  { start: 15, end: 45, title: "The unseen", cn: "穿过遮挡" },
+  { start: 45, end: 75, title: "Beyond the frame", cn: "视野之外" },
   { start: 75, end: 105, title: "When data fades", cn: "感知的边界" },
-  { start: 105, end: 135, title: "How light reaches you", cn: "从数据到视野" },
-  { start: 135, end: 163, title: "From simulation to reality", cn: "回到真实" },
-  { start: 163, end: 180, title: "What comes next", cn: "未来座舱" },
+  { start: 105, end: 136, title: "How light reaches you", cn: "从数据到视野" },
+  { start: 136, end: 151, title: "From simulation to reality", cn: "回到真实" },
+  { start: 151, end: 180, title: "Future cockpit", cn: "未来座舱" },
 ] as const;
 export const clamp = (u: number) => Math.min(1, Math.max(0, u));
 export function smooth(value: number) {
@@ -40,7 +40,7 @@ export function realityComparison(progress: number) {
   return {
     progress,
     section: 0,
-    boundary: ramp(progress, 0.27, 0.47),
+    boundary: pulse(progress, 0.12, 0.34, 0.91, 1),
     eyeX: 0.08 * pulse(progress, 0.56, 0.68, 0.75, 0.89),
     wipe: 1 - ramp(progress, 0.42, 0.84),
   };
@@ -49,8 +49,8 @@ export function cockpitFuture(progress: number) {
   return {
     progress,
     exterior: 0,
-    console: pulse(progress, 0.14, 0.39, 0.65, 0.87),
-    signature: ramp(progress, 0.5, 0.83),
+    console: pulse(progress, 2 / 29, 4 / 29, 7 / 29, 9 / 29),
+    signature: ramp(progress, 19 / 29, 25 / 29),
   };
 }
 
@@ -70,18 +70,18 @@ export function storyFrame(p: number) {
   const index = chapter < 0 ? 6 : chapter,
     c = chapters[index],
     local = clamp((sec - c.start) / (c.end - c.start));
-  const optics = opticalScene(clamp((sec - 105) / 30)),
-    reality = realityComparison(clamp((sec - 135) / 28)),
-    future = cockpitFuture(clamp((sec - 163) / 17));
+  const optics = opticalScene(clamp((sec - 105) / 31)),
+    reality = realityComparison(clamp((sec - 136) / 15)),
+    future = cockpitFuture(clamp((sec - 151) / 29));
   const study =
     index === 4 ? optics.section : index === 5 ? reality.section : 0;
   const opts: Controls = { ...defaults };
   let scene: Scenario = "truck",
-    time = 2.4 * ramp(sec, 0, 24) + (65 / 12 - 2.4) * ramp(sec, 32, 43),
+    time = 2.4 * ramp(sec, 0, 24) + (65 / 12 - 2.4) * ramp(sec, 32, 45),
     strength = 0;
   if (index === 2) {
     scene = "cross";
-    time = 3.2 * ramp(sec, 43, 52) + 4.9 * ramp(sec, 63, 74);
+    time = 3.2 * ramp(sec, 45, 52) + 4.9 * ramp(sec, 63, 74);
     strength = -pulse(sec, 53, 59, 67, 72);
   } else if (index === 3 || index === 4) {
     scene = "degraded";
@@ -101,17 +101,17 @@ export function storyFrame(p: number) {
     opts.existenceOverride = sec >= 90 && sec < 100 ? 0.41 : null;
   } else if (index >= 5) {
     scene = "cross";
-    time = 3.2 + 1.9 * ramp(sec, 161, 175);
-    strength = -pulse(sec, 135, 136, 158, 163);
+    time = 3.2 + 3.97 * ramp(sec, 160, 180);
+    strength = -pulse(sec, 136, 137.8, 139, 142);
   }
   const s = frame(time, opts, scene, "left", strength < -0.001);
   const outside = 1 - ramp(sec, 2, 14),
-    side = pulse(sec, 30, 36, 38, 43);
+    side = pulse(sec, 30, 36, 38, 45);
   const exit = future.exterior;
   const eye = { ...s.camera.eye };
   if (index === 5)
     eye.north +=
-      (38 + 11.8 * cfg.egoSpeed - eye.north) * (1 - ramp(sec, 135, 139));
+      (38 + 11.8 * cfg.egoSpeed - eye.north) * (1 - ramp(sec, 136, 139));
   eye.east += 0.14 * future.console;
   eye.up -= 0.05 * future.console;
   eye.north += 0.12 * future.console;
@@ -160,7 +160,7 @@ export function storyFrame(p: number) {
     optics,
     reality,
     future,
-    wipe: index === 5 && sec >= 136 ? reality.wipe : 1,
+    wipe: 1,
     evidence: evidenceLevel(s),
   };
 }

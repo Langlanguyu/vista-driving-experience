@@ -7,7 +7,7 @@ const cfg = JSON.parse(
 test("actual GLBs, instances and the occlusion proxy agree on physical dimensions", async ({
   page,
 }) => {
-  await page.goto("/?auditVehicles");
+  await page.goto("/?lab&auditVehicles");
   await expect(page.locator(".view")).toHaveAttribute("data-ready", "true");
   const v = JSON.parse(
     (await page.locator("canvas").getAttribute("data-vehicles"))!,
@@ -26,7 +26,7 @@ test("actual GLBs, instances and the occlusion proxy agree on physical dimension
 test("isolated cockpit pixels match in normal, left and right projection", async ({
   page,
 }) => {
-  await page.goto("/?isolateCockpit");
+  await page.goto("/?lab&isolateCockpit");
   await expect(page.locator(".view")).toHaveAttribute("data-ready", "true");
   await page.getByLabel("驾驶场景").selectOption("cross");
   await page.getByRole("button", { name: "展开控制台" }).click();
@@ -50,7 +50,7 @@ test("isolated cockpit pixels match in normal, left and right projection", async
 test("manual fog and transport survive a story detour; switching out of Inspect restores forward driver pose", async ({
   page,
 }) => {
-  await page.goto("/?verifyCamera");
+  await page.goto("/?lab&verifyCamera");
   const v = page.locator(".view"),
     btn = (name: string) => page.getByRole("button", { name, exact: true });
   await expect(v).toHaveAttribute("data-ready", "true");

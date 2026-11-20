@@ -6,7 +6,7 @@ test("two camera poses, HUD-off occlusion and reproducible driving frames", asyn
   const failures: string[] = [];
   page.on("requestfailed", (r) => failures.push(r.url()));
   page.on("pageerror", (e) => failures.push(e.message));
-  await page.goto("/");
+  await page.goto("/?lab");
   const view = page.locator(".view"),
     hud = page.locator("[data-mode]");
   await expect(view).toHaveAttribute("data-ready", "true", { timeout: 45000 });

@@ -26,6 +26,7 @@ static const char *mime(const char *p){
   if(!strcmp(e,".webp"))return "image/webp";
   if(!strcmp(e,".png"))return "image/png";
   if(!strcmp(e,".jpg"))return "image/jpeg";
+  if(!strcmp(e,".m4a"))return "audio/mp4";
   if(!strcmp(e,".glb"))return "model/gltf-binary";
   if(!strcmp(e,".woff2"))return "font/woff2";
   if(!strcmp(e,".txt"))return "text/plain; charset=utf-8";

@@ -10,7 +10,7 @@ export function useSceneController() {
     [side, setSide] = useState<Side>("left");
   const [mode, setMode] = useState<ProjectionMode>("normal"),
     [story, setStory] = useState(() =>
-      new URLSearchParams(location.search).has("story"),
+      !new URLSearchParams(location.search).has("lab"),
     ),
     [scroll, setScroll] = useState(0);
   const { t, playing, play, seek, toggle, setTimelineProgress } =

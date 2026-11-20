@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 test("optical lab refocuses, loses rays outside the eye box, recovers and restores the story optical boundary", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?lab");
   const view = page.locator(".view");
   await expect(view).toHaveAttribute("data-ready", "true");
   await page.getByRole("button", { name: "OPTICAL LAB", exact: true }).click();
@@ -29,16 +29,17 @@ test("optical lab refocuses, loses rays outside the eye box, recovers and restor
   }
   await page.getByLabel("退出光学实验").click();
   await page.getByRole("button", { name: "STORY EXPERIENCE" }).click();
+  await page.getByLabel("探索时间轴").click();
   const time = page.getByLabel("影片时间");
   for (const [t, admission] of [
-    [149, "field"],
-    [155, "eye"],
-    [161, "field"],
+    [141, "field"],
+    [146.5, "eye"],
+    [150, "field"],
   ] as const) {
     await time.fill(String(t));
     await expect(view).toHaveAttribute("data-admission", admission);
   }
-  await time.fill("171");
+  await time.fill("156");
   await expect(view).toHaveAttribute("data-console", "1.000");
   await expect(page.locator(".futureDirection")).toBeVisible();
   await time.fill("180");

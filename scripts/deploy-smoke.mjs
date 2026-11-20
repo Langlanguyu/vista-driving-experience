@@ -14,7 +14,27 @@ page.on("pageerror",e=>errors.push(e.message));
 page.on("response",r=>{if(r.status()>=400)failed.push([r.status(),r.url()]);if(r.url().endsWith(".glb")&&r.status()===200)models.add(new URL(r.url()).pathname)});
 async function attr(selector,key,value){await page.waitForFunction(({selector,key,value})=>document.querySelector(selector)?.getAttribute(key)===value,{selector,key,value},{timeout:15000})}
 try{
- await page.goto(root);await attr(".view","data-ready","true");
+ await page.addInitScript(()=>{
+   window.vistaAudioSamples=[];
+   const start=AudioBufferSourceNode.prototype.start;
+   AudioBufferSourceNode.prototype.start=function(...args){
+     const buffer=this.buffer;
+     if(buffer){
+       const samples=buffer.getChannelData(0);let peak=0;
+       for(let i=0;i<samples.length;i+=509)peak=Math.max(peak,Math.abs(samples[i]));
+       window.vistaAudioSamples.push({duration:buffer.duration,offset:args[1],peak});
+     }
+     return start.apply(this,args);
+   };
+ });
+ await page.goto(root);await attr(".view","data-ready","true");await attr(".film","data-playing","true");
+ await page.getByRole("button",{name:"Beyond the frame",exact:true}).click();
+ await page.getByRole("button",{name:"ENABLE SOUND",exact:true}).click();
+ await page.getByRole("button",{name:"SOUND ON",exact:true}).waitFor();
+ await page.getByRole("button",{name:"LIVE LAB ↗",exact:true}).click();
+ const audio=await page.evaluate(()=>window.vistaAudioSamples);
+ if(!audio.some(x=>x.duration>179&&x.offset>=45&&x.peak>.05)||!audio.some(x=>x.duration<33&&x.peak>.05))throw Error(JSON.stringify(audio));
+ await page.goto(root+"?lab");await attr(".view","data-ready","true");
  await attr(".view","data-xray","true");
  await page.getByRole("button",{name:"HUD ON",exact:true}).click();await attr(".view","data-xray","false");
  await page.getByRole("button",{name:"HUD OFF",exact:true}).click();
@@ -29,12 +49,13 @@ try{
  await page.getByRole("button",{name:"OPTICAL LAB",exact:true}).click();await attr(".view","data-rays","9");
  await page.getByRole("slider",{name:"眼点横移"}).fill("84");await attr(".view","data-rays","0");await page.getByLabel("退出光学实验").click();
  await page.getByRole("button",{name:"STORY EXPERIENCE"}).click();
- for(const t of [27,60,97,126,155,171,180])await page.getByLabel("影片时间").fill(String(t));
+ await page.getByLabel("探索时间轴").click();
+ for(const t of [27,60,97,126,146.5,156,180])await page.getByLabel("影片时间").fill(String(t));
  await page.getByRole("button",{name:"REPLAY STORY",exact:true}).waitFor();
  await page.screenshot({path:"release/verification/"+label+".png"});
  await page.getByRole("button",{name:"LIVE LAB ↗",exact:true}).click();
  await page.getByLabel("驾驶场景").waitFor();
  if(models.size!==4||errors.length||blocked.length||failed.length)throw Error(JSON.stringify({models:[...models],errors,blocked,failed}));
- const result={url:root,browser:browser.version(),externalNetwork:"all non-origin requests blocked before fresh load",models:[...models],errors,blocked,failed,checks:["world","xray","quality-cycle","adaptive-left-right","degraded","optical-eye-box","seven-story-seeks","return-to-lab"]};
+ const result={url:root,browser:browser.version(),externalNetwork:"all non-origin requests blocked before fresh load",models:[...models],errors,blocked,failed,audio,checks:["sound-unlock-seek-lab","world","xray","quality-cycle","adaptive-left-right","degraded","optical-eye-box","seven-story-seeks","return-to-lab"]};
  await writeFile("release/verification/"+label+".json",JSON.stringify(result,null,2));console.log(label+" passed");
 }finally{await browser.close()}

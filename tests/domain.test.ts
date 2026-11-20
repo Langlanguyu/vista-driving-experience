@@ -172,8 +172,8 @@ test("story camera moves in space and remains continuous through the junction ha
     storyFrame(0.13).s.camera.eye,
     storyFrame(0.3).s.camera.eye,
   );
-  const a = storyFrame((43 - 0.001) / 180).s.camera,
-    b = storyFrame((43 + 0.001) / 180).s.camera;
+  const a = storyFrame((45 - 0.001) / 180).s.camera,
+    b = storyFrame((45 + 0.001) / 180).s.camera;
   assert.ok(
     Math.hypot(
       a.eye.north - b.eye.north,
@@ -320,7 +320,7 @@ test("dense fog, radio transport and source quality can be isolated by holding t
 
 test("the seven chapter seams restore the same pose when sampled forwards or backwards", () => {
   const at = (t: number) => storyFrame(t / 180);
-  for (const [k, cut] of [15, 43, 75, 105, 135, 163].entries()) {
+  for (const [k, cut] of [15, 45, 75, 105, 136, 151].entries()) {
     const a = at(cut - 0.001),
       b = at(cut + 0.001);
     assert.equal(a.chapter, k);

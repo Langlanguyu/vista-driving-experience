@@ -22,6 +22,7 @@ import {
 import { displayBoundary, solveOptics } from "../domain/opticalRayTracer";
 import type { SceneState } from "../domain/types";
 import { verticalFov } from "../domain/geometry";
+import { OpeningType } from "./OpeningType";
 import { CrossingTitle } from "./CrossingTitle";
 import { CameraController } from "./CameraController";
 import { StreetWorld } from "./StreetWorld";
@@ -48,6 +49,7 @@ export function Drive({
   film,
   projection = researchDefaults,
   optical,
+  loaded,
 }: {
   s: SceneState;
   hud: boolean;
@@ -62,6 +64,7 @@ export function Drive({
   xray: boolean;
   film?: StorySample | null;
   projection?: ProjectionSettings;
+  loaded: (v: boolean) => void;
   optical?: OpticalSettings | null;
 }) {
   const cockpitLayer = useMemo(() => new T.Scene(), []);
@@ -70,7 +73,11 @@ export function Drive({
   const host = useRef<HTMLElement>(null),
     [size, setSize] = useState([1440, 900]),
     [ready, setReady] = useState(false);
-  const onReady = useCallback(() => setReady(true), []);
+  const onReady = useCallback(() => {
+    setReady(true);
+    loaded(true);
+  }, [loaded]);
+  const opening = film?.chapter === 0 && film.sec < 11;
   useLayoutEffect(() => {
     const el = host.current!;
     const sync = () => setSize([el.clientWidth, el.clientHeight]);
@@ -185,6 +192,8 @@ export function Drive({
     virtual: depthView,
     vid: settings.vid,
     console: film?.future.console ?? 0,
+    bench: solution.bench,
+    film: !!film,
   };
   const [showHud, setShowHud] = useState(hud);
   useLayoutEffect(() => {
@@ -254,7 +263,7 @@ export function Drive({
           <CameraController s={current} owner={owner} />
           <StreetWorld
             study={optical ? +settings.section : (stage?.dashboardReveal ?? 0)}
-            futureConsole={film?.chapter === 6}
+            futureConsole={film?.chapter === 6 && film.sec < 164}
             xrayAmount={film?.xrayAmount}
             cockpitLayer={cockpitLayer}
             s={current}
@@ -280,6 +289,17 @@ export function Drive({
               />,
               cockpitLayer,
             )}
+          {opening &&
+            createPortal(
+              <OpeningType
+                seconds={film.sec}
+                low={
+                  params.get("quality") === "low" ||
+                  matchMedia("(prefers-reduced-motion:reduce)").matches
+                }
+              />,
+              cockpitLayer,
+            )}
           {story && <CrossingTitle opacity={film?.crossingType ?? 0} />}
           <ProjectionPass
             strength={strength}
@@ -287,10 +307,11 @@ export function Drive({
             opticalView={opticalView}
             compare={compareMix}
             study={optical ? section : (stage?.environmentFade ?? 0)}
+            opening={opening ? film.sec : -1}
             wipe={film?.wipe}
-            cabinOpacity={film?.cabinOpacity}
+            cabinOpacity={opening ? 1 : film?.cabinOpacity}
             cockpitLayer={cockpitLayer}
-            cabinOn={cabinOn && !inspect}
+            cabinOn={(cabinOn || opening) && !inspect}
             cockpitFov={verticalFov(
               Math.max(80, Math.min(95, lens)),
               size[0] / size[1],
@@ -299,7 +320,7 @@ export function Drive({
         </Suspense>
       </Canvas>
       {!story && <div key={s.scenario} className="sceneDissolve" />}
-      {!ready && <div className="loading">正在载入滨河街区…</div>}
+      {!ready && <div className="loading">V I S T A　 /　 正在载入街区</div>}
       {ready && !inspect && !compare && (
         <div
           className={
@@ -347,14 +368,25 @@ export function Drive({
         ))}
       {ready &&
         film?.chapter === 6 &&
-        film.sec < 176 &&
+        film.sec < 162 &&
         (s.decision.risk.level === "urgent" ||
           s.decision.risk.level === "caution") && (
           <div className="futureDirection">
             ‹　{s.decision.direction} · 横向来车
           </div>
         )}
-      {ready && (boundary > 0.1 || optical) && (
+      {ready && boundary > 0.1 && (
+        <div className="boundaryCue" style={{ opacity: boundary }}>
+          13° × 5°　/　参考显示视场
+          <br />
+          {admission === "eye"
+            ? "眼盒外　·　虚像消失"
+            : admission === "field"
+              ? "‹ 左侧来车　·　显示范围外"
+              : "眼盒内"}
+        </div>
+      )}
+      {ready && optical && (
         <div className="opticalReadout" data-valid={!!solution.image}>
           <small>
             {boundary ? "参考设计显示范围" : "OPTICAL LAB · 几何追迹"}

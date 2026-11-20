@@ -38,7 +38,7 @@ function line(points: T.Vector3[], color: string, dash = false) {
 }
 function lettering(word: string) {
   const canvas = document.createElement("canvas");
-  canvas.width = 512;
+  canvas.width = 620;
   canvas.height = 80;
   const ctx = canvas.getContext("2d")!;
   ctx.font = "500 40px Helvetica Neue, sans-serif";
@@ -50,7 +50,7 @@ function lettering(word: string) {
     new T.SpriteMaterial({ map, depthTest: false, transparent: true }),
   );
   sprite.center.set(0, 0.5);
-  sprite.scale.set(0.39, 0.061, 1);
+  sprite.scale.set(0.43, 0.056, 1);
   sprite.renderOrder = 12;
   return sprite;
 }
@@ -208,9 +208,9 @@ export function OpticalAssembly({
     const entries: [string, T.Vector3, T.Vector3][] = [
       ["PGU", b.emitter.center, v(0.1, -0.115, 0.1)],
       ["M1  /  FOLD", b.mirror1.center, v(0, -0.19, -0.1)],
-      ["M2  /  MAIN", b.mirror2.center, v(0.02, -0.1, 0.08)],
-      ["COMBINER", b.glass.center, v(0.03, 0.15, -0.12)],
-      ["EYE BOX", b.eye.center, v(0, 0.095, 0.01)],
+      ["FREEFORM MIRROR", b.mirror2.center, v(0.02, -0.1, 0.08)],
+      ["WINDSHIELD", b.glass.center, v(0.03, 0.15, -0.12)],
+      ["EYEBOX", b.eye.center, v(0, 0.095, 0.01)],
     ];
     for (const [word, origin, offset] of entries) {
       const end = origin.clone().add(offset),
@@ -226,10 +226,25 @@ export function OpticalAssembly({
     parts.add(eye);
     for (const { path, pixel } of solution.fields) {
       const p = path.points;
+      const primary = pixel.distanceTo(b.virtual) < 1e-6;
       // Begin at the receiving end of the chain, then reveal successively earlier legs.
       for (let j = 3; j >= 0; j--) {
         const l = line([p[j], p[j + 1]], "#f8c876");
-        l.userData.leg = 3 - j;
+        l.material.transparent = true;
+        l.material.opacity = primary ? 0.95 : 0.24;
+        if (primary) {
+          const beam = new T.Mesh(
+            new T.CylinderGeometry(0.0034, 0.0034, 1, 10),
+            new T.MeshBasicMaterial({ color: "#ffce85" }),
+          );
+          beam.quaternion.setFromUnitVectors(
+            v(0, 1, 0),
+            p[j + 1].clone().sub(p[j]).normalize(),
+          );
+          beam.userData = { start: p[j], end: p[j + 1], leg: j, beam: true };
+          paths.add(beam);
+        }
+        l.userData.leg = j;
         l.userData.start = p[j];
         l.userData.end = p[j + 1];
         paths.add(l);
@@ -242,8 +257,12 @@ export function OpticalAssembly({
           v(0, 1, 0),
           p[j + 1].clone().sub(p[j]).normalize(),
         );
-        arrow.userData.leg = 3 - j;
-        paths.add(arrow);
+        arrow.userData.leg = j;
+        if (primary) paths.add(arrow);
+        else {
+          arrow.geometry.dispose();
+          arrow.material.dispose();
+        }
       }
       const through = p[4]
         .clone()
@@ -344,7 +363,13 @@ export function OpticalAssembly({
   paths.children.forEach((l) => {
     const progress = T.MathUtils.clamp(real * 4 - l.userData.leg, 0, 1);
     l.visible = progress > (l instanceof T.Line ? 0.001 : 0.37);
-    if (l instanceof T.Line) clipLine(l, progress, true);
+    if (l instanceof T.Line) clipLine(l, progress);
+    if (l.userData.beam) {
+      const { start, end } = l.userData;
+      l.visible = progress > 0.002;
+      l.position.copy(start).lerp(end, progress / 2);
+      l.scale.y = start.distanceTo(end) * progress;
+    }
   });
   back.visible = virtual > 0.01;
   back.children.forEach((l) => {
@@ -356,6 +381,10 @@ export function OpticalAssembly({
   plane.visible = virtual > 0.12 || boundary > 0.01;
   plane.children.forEach((o) => {
     if (o instanceof T.Sprite) o.visible = virtual > 0.55;
+    if (o instanceof T.Line) {
+      o.material.transparent = true;
+      o.material.opacity = Math.max(virtual, boundary);
+    }
   });
   glyph.visible = Math.max(image, virtual) > 0.01 && !!solution.image;
   glyph.children.forEach(

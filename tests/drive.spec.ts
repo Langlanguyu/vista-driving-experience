@@ -4,7 +4,7 @@ test("quality, clock, link failure, recovery and display share one scenario", as
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/?lab");
   await expect(page.locator(".view")).toHaveAttribute("data-ready", "true", {
     timeout: 45000,
   });

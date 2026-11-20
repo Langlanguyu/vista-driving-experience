@@ -4,7 +4,7 @@ test("teaching reveal freezes the same geometry, restores projection and resumes
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/?lab");
   const view = page.locator(".view"),
     hud = page.locator("[data-mode]");
   await expect(view).toHaveAttribute("data-ready", "true", { timeout: 45000 });

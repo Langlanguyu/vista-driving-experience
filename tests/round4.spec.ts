@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("mirror expansion keeps the eye fixed and registers the estimated point with a real WebGL mesh", async ({
   page,
 }) => {
-  await page.goto("/?verifyProjection");
+  await page.goto("/?lab&verifyProjection");
   const view = page.locator(".view");
   await expect(view).toHaveAttribute("data-ready", "true");
   await page.getByLabel("驾驶场景").selectOption("cross");
@@ -65,7 +65,7 @@ test("mirror expansion keeps the eye fixed and registers the estimated point wit
 test("three live presets reset the clock; story wheel drives and reverses the camera; the ending hands control to lab on request", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?lab");
   const view = page.locator(".view");
   await expect(view).toHaveAttribute("data-ready", "true");
   await page.getByLabel("驾驶场景").selectOption("degraded");
@@ -82,6 +82,7 @@ test("three live presets reset the clock; story wheel drives and reverses the ca
   const eye = await view.getAttribute("data-eye");
   await page.mouse.move(680, 370);
   await page.mouse.wheel(0, 900);
+  await expect(page.locator(".film")).toHaveAttribute("data-playing","false");
   await expect(view).not.toHaveAttribute("data-eye", eye!);
   const scroll = page.getByRole("region", { name: "滚动控制三维镜头" });
   const go = (n: number) =>
@@ -107,7 +108,7 @@ test("three live presets reset the clock; story wheel drives and reverses the ca
 test("risk-driven wing waits for RSU evidence and retracts after cross traffic clears", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?lab");
   const view = page.locator(".view");
   await expect(view).toHaveAttribute("data-ready", "true");
   await page.getByLabel("驾驶场景").selectOption("cross");
