@@ -30,3 +30,9 @@ Apple M4、16 GB、Chrome 157、ANGLE Metal。构建、TS 类型检查、23 项�
 - macOS Intel / Apple Silicon 离线包位于 release/vista-r6-final-cut.zip。实测从 ZIP 解压运行内置 HTTP 服务，Chrome 全部跨源请求受阻，四份 GLB、HUD、投影、状态降级、光学、双音轨与 Story/Lab 交互通过。验收 JSON 保存在 release/verification。
 - npm run build 生成生产应用；npm run test:e2e 检查交互。启动本机生产服务后用 VISTA_URL 指定地址，运行 node scripts/r6-perf.mjs 或 node scripts/r6-capture.mjs。录制完整影片使用 --film。npm run package:offline 生成 macOS ZIP。
 - 低性能入口 ?quality=low 使用稀疏字形及局部遮罩。光学表面、参考设计视场与车辆风险均为既有仿真，未进行实车测量。
+
+## 上线复验
+
+2026-11-20，GitHub Actions [44659109173](https://github.com/Langlanguyu/vista-driving-experience/actions/runs/44659109173) 的构建与部署均成功。Chrome 从[公网成片](https://langlanguyu.github.io/vista-driving-experience/r6/)冷启动，验证了默认播放、解锁声音、跳章、Lab 环境声、四份 GLB、X-Ray、左右投影、感知降级、光学眼盒及往返 Lab。检查中页面错误、失败请求、外部依赖请求均为零。原根地址的 JS 构建标识与 Preview v1 发行包相同。后续更新 r6-cinematic-final-cut 后，在 main 上重新运行 Deploy VISTA Preview 即可更新 /r6/。
+
+补测通过低成本模式、播放中跳章、模拟 visibilitychange 暂停/恢复及音频请求失败后的静音反馈。未做外部扬声器输出电平与声画端到端延迟标定。Actions 对现有 v4/v5 发布动作给出 Node 20 运行时弃用提醒，本次已使用托管运行时完成。
