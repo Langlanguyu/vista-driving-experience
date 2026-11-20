@@ -1,7 +1,8 @@
-import {cpSync,mkdirSync,writeFileSync,chmodSync,readdirSync,readFileSync,statSync} from "node:fs";
+import {cpSync,mkdirSync,writeFileSync,chmodSync,readdirSync,readFileSync,statSync,existsSync,renameSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
-const out="release/vista-r61";
+const out="release/vista-r62";
+if(existsSync(out)) renameSync(out,out+"-previous-"+Date.now());
 mkdirSync(out+"/site",{recursive:true});
 cpSync("dist",out+"/site",{recursive:true});
 execFileSync("/usr/bin/clang",["-Wall","-Wextra","-O2","-arch","arm64","-arch","x86_64","-mmacosx-version-min=11.0","scripts/offline-server.c","-o",out+"/vista-server"],{stdio:"inherit"});
@@ -39,5 +40,5 @@ writeFileSync(out+"/THIRD-PARTY-LICENSES.txt",notices.join("\n\n----------------
 const hashes=[];
 function walk(dir){for(const name of readdirSync(dir)){const p=dir+"/"+name;if(statSync(p).isDirectory())walk(p);else if(name!=="SHA256SUMS.txt")hashes.push(createHash("sha256").update(readFileSync(p)).digest("hex")+"  "+p.slice(out.length+1));}}
 walk(out);writeFileSync(out+"/SHA256SUMS.txt",hashes.join("\n")+"\n");
-execFileSync("/usr/bin/ditto",["-c","-k","--keepParent",out,"release/vista-r61.zip"],{stdio:"inherit"});
-console.log("Packaged "+out+" and release/vista-r61.zip");
+execFileSync("/usr/bin/ditto",["-c","-k","--keepParent",out,"release/vista-r62.zip"],{stdio:"inherit"});
+console.log("Packaged "+out+" and release/vista-r62.zip");

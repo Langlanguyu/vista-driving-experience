@@ -27,3 +27,6 @@ R6.1 daylight, reflections and sun direction: Hausdorf Clear Sky (1K HDR),
 Grzegorz Wronkowski / Poly Haven. CC0.
 https://polyhaven.com/a/hausdorf_clear_sky
 https://polyhaven.com/license
+
+R6.2 daylight-clouds.webp — coverage and brightness derived from Kloofendal 48d Partly Cloudy Pure Sky, Poly Haven (CC0).
+https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky

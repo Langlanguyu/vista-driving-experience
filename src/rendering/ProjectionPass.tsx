@@ -1,3 +1,4 @@
+import { apertureShader } from "./OpeningType";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as T from "three";
@@ -68,6 +69,7 @@ export function ProjectionPass({
       studio: { value: 0 },
       opening: { value: -1 },
       wipe: { value: 1 },
+      aspect: { value: 1 },
       hTan: { value: 1 },
       isolate: {
         value: +(
@@ -86,7 +88,8 @@ export function ProjectionPass({
       depthWrite: false,
       vertexShader:
         "varying vec2 v; void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}",
-      fragmentShader: `varying vec2 v; uniform sampler2D source,cabin,lattice; uniform float isolate,hasCabin,hTan,studio,wipe,opening; uniform vec2 edges; uniform float power,compare;
+      fragmentShader: `varying vec2 v; uniform sampler2D source,cabin,lattice; uniform float isolate,hasCabin,hTan,studio,wipe,opening,aspect; uniform vec2 edges; uniform float power,compare;
+      ${apertureShader}
       vec4 sampleScene(float x,float y,float a){
         vec2 cabinUV=vec2(.5+.5*x,y);
         vec2 grid=texture2D(lattice,(cabinUV*vec2(128.,64.)+.5)/vec2(129.,65.)).rg;
@@ -95,16 +98,10 @@ export function ProjectionPass({
         vec3 world=texture2D(source,vec2((raw-edges.x)/(edges.y-edges.x),y)).rgb*(1.-isolate);
         float light=exp(-2.8*length(vec2(x-.28,1.3*(cabinUV.y-.57))));
         world=mix(world,vec3(.040,.052,.054)+vec3(.145,.165,.152)*light,studio);
-        if(opening>=0.){
-          vec2 center=mix(vec2(.60,.42),vec2(.5,.51),smoothstep(5.,9.,opening));
-          float distanceToRoad=length((cabinUV-center)*vec2(.85,1.2));
-          float radius=mix(-.16,1.,smoothstep(5.3,10.7,opening));
-          float ink=smoothstep(radius-.09,radius+.09,distanceToRoad);
-          vec3 studioLight=vec3(.008,.011,.010)+vec3(.034,.039,.034)*exp(-3.*distanceToRoad);
-          world=mix(world,studioLight,ink);
-        }
         vec4 interior=texture2D(cabin,cabinUV)*hasCabin;
-        return vec4(world*(1.-interior.a)+interior.rgb,1.);
+        vec3 view=world*(1.-interior.a)+interior.rgb;
+        if(opening>=0.)view=openingFrame(view,cabinUV,aspect,opening);
+        return vec4(view,1.);
       }
       void main(){
         float x=v.x*2.-1.;
@@ -164,6 +161,7 @@ export function ProjectionPass({
       c.far,
     );
     c.projectionMatrixInverse.copy(c.projectionMatrix).invert();
+    pass.uniforms.aspect.value = c.aspect;
     pass.uniforms.hTan.value = halfWidth / c.near;
     gl.getDrawingBufferSize(pass.size);
     // Fixed capacity avoids reallocating MSAA/color/depth storage during a transition.

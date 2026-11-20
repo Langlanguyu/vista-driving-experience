@@ -52,12 +52,11 @@ export function OpticalControls({
   return (
     <aside className="opticalControls">
       <div>
-        <small>LIVE LAB　/　OPTICS</small>
+        <h2>光学实验</h2>
         <button onClick={close} aria-label="退出光学实验">
           ×
         </button>
       </div>
-      <h2>光学实验</h2>
       <p>转动剖面，沿连续光线查看反射路径。虚线连接到估计虚像。</p>
       <Dial
         label="观察方位"
@@ -69,15 +68,6 @@ export function OpticalControls({
         onChange={(v) => update("orbit", (v * Math.PI) / 180)}
       />
       <Dial
-        label="等效设计距离"
-        min={3}
-        max={14}
-        step={0.25}
-        value={o.vid}
-        unit="m"
-        onChange={(v) => update("vid", v)}
-      />
-      <Dial
         label="眼点横移"
         min={-85}
         max={85}
@@ -85,6 +75,16 @@ export function OpticalControls({
         value={o.eyeX * 1000}
         unit="mm"
         onChange={(v) => update("eyeX", v / 1000)}
+      />
+      <details className="opticsAdvanced"><summary>光路与设计参数</summary>
+      <Dial
+        label="等效设计距离"
+        min={3}
+        max={14}
+        step={0.25}
+        value={o.vid}
+        unit="m"
+        onChange={(v) => update("vid", v)}
       />
       <Dial
         label="眼点升降"
@@ -115,6 +115,7 @@ export function OpticalControls({
           </button>
         ))}
       </div>
+      </details>
     </aside>
   );
 }

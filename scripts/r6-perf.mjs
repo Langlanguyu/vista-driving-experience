@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
 import { writeFile } from "node:fs/promises";
-const refinement = process.argv.includes("--r61");
+const final = process.argv.includes("--r62");
+const refinement = final || process.argv.includes("--r61");
 const url = process.env.VISTA_URL ?? "http://127.0.0.1:4186/";
 const browser = await chromium.launch({ channel: "chrome" });
 try {
@@ -16,6 +17,7 @@ try {
       "Prologue",
       "Beyond the frame",
       "How light reaches you",
+      ...(final ? ["Future cockpit"] : []),
     ]) {
       await page.getByRole("button", { name: title, exact: true }).click();
       if (refinement) {
@@ -26,7 +28,7 @@ try {
           await page.getByLabel("探索时间轴").click();
           await page
             .getByLabel("影片时间")
-            .fill(title === "Beyond the frame" ? "54" : "116");
+            .fill(title === "Beyond the frame" ? "54" : title === "Future cockpit" ? "171" : "116");
           await page.getByLabel("探索时间轴").click();
           await page.getByLabel("自动播放").click();
         }
@@ -60,6 +62,9 @@ try {
           renderer,
           frameCount: times.length,
           fps: (1000 * (times.length - 1)) / (times.at(-1) - times[0]),
+          maxIntervalMs: delta.at(-1),
+          over50ms: delta.filter(v=>v>50).length,
+          over100ms: delta.filter(v=>v>100).length,
           p95FrameMs: delta[Math.floor(0.95 * delta.length)],
         };
       });
@@ -69,7 +74,7 @@ try {
   }
   console.log(result);
   await writeFile(
-    refinement
+    final ? "docs/verification/r62/perf.json" : refinement
       ? "docs/verification/r61/perf.json"
       : "docs/verification/r6/perf.json",
     JSON.stringify({ url, browser: browser.version(), result }, null, 2),

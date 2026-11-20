@@ -46,7 +46,7 @@ test("five real HUD representations, chapter seeks, restart and reversible Lab d
   await expect(view).toHaveAttribute("data-strength", "-1.0000");
   await expect(view).toHaveAttribute("data-eye", eye!);
   await page.getByLabel("探索时间轴").click();
-  await page.getByLabel("故事章节").selectOption("4");
+  await page.getByRole("button", { name: "How light reaches you", exact: true }).click();
   await expect(film).toHaveAttribute("data-chapter", "4");
   await range.fill("126");
   await page.getByRole("button", { name: "重看本章" }).click();

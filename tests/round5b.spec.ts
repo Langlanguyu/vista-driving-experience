@@ -7,6 +7,7 @@ test("optical lab refocuses, loses rays outside the eye box, recovers and restor
   await expect(view).toHaveAttribute("data-ready", "true");
   await page.getByRole("button", { name: "OPTICAL LAB", exact: true }).click();
   await expect(view).toHaveAttribute("data-rays", "9");
+  await page.getByText("光路与设计参数", { exact: true }).click();
   await page.getByRole("slider", { name: "等效设计距离" }).fill("6.5");
   await expect(view).toHaveAttribute("data-image-distance", "6.50000");
   await page.getByRole("slider", { name: "眼点横移" }).fill("84");

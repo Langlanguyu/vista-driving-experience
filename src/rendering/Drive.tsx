@@ -22,7 +22,6 @@ import {
 import { displayBoundary, solveOptics } from "../domain/opticalRayTracer";
 import type { SceneState } from "../domain/types";
 import { verticalFov } from "../domain/geometry";
-import { OpeningType } from "./OpeningType";
 import { CrossingTitle } from "./CrossingTitle";
 import { CameraController } from "./CameraController";
 import { StreetWorld } from "./StreetWorld";
@@ -292,17 +291,6 @@ export function Drive({
               />,
               cockpitLayer,
             )}
-          {opening &&
-            createPortal(
-              <OpeningType
-                seconds={film.sec}
-                low={
-                  params.get("quality") === "low" ||
-                  matchMedia("(prefers-reduced-motion:reduce)").matches
-                }
-              />,
-              cockpitLayer,
-            )}
           {story && <CrossingTitle opacity={film?.crossingType ?? 0} />}
           <ProjectionPass
             economy={economy}
@@ -313,9 +301,9 @@ export function Drive({
             study={optical ? section : (stage?.environmentFade ?? 0)}
             opening={opening ? film.sec : -1}
             wipe={film?.wipe}
-            cabinOpacity={opening ? 1 : film?.cabinOpacity}
+            cabinOpacity={film?.cabinOpacity}
             cockpitLayer={cockpitLayer}
-            cabinOn={(cabinOn || opening) && !inspect}
+            cabinOn={cabinOn && !inspect}
             cockpitFov={verticalFov(
               Math.max(80, Math.min(95, lens)),
               size[0] / size[1],

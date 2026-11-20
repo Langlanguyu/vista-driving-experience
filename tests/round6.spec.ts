@@ -62,6 +62,7 @@ test("default film waits for assets, unlocks real audio at film time and preserv
     .poll(async () => (await starts()).at(-1))
     .toBeGreaterThanOrEqual(45);
   await page.getByLabel("暂停叙事").click();
+  await expect(page.getByText("SOUND READY", { exact: true })).toBeVisible();
   const paused = Number(await film.getAttribute("data-seconds"));
   await page.getByLabel("自动播放").click();
   await expect
@@ -74,7 +75,9 @@ test("default film waits for assets, unlocks real audio at film time and preserv
     .poll(async () => (await starts()).at(-1))
     .toBeGreaterThanOrEqual(45);
   await page.getByText("SOUND ON", { exact: true }).click();
-  await expect(page.getByText("ENABLE SOUND", { exact: true })).toBeVisible();
+  await expect(page.getByText("SOUND OFF", { exact: true })).toBeVisible();
+  await page.getByText("SOUND OFF", {exact:true}).click();
+  await expect(page.getByText("SOUND ON", {exact:true})).toBeVisible();
   await page.reload();
   await expect(film).toHaveAttribute("data-chapter", "0");
 });
@@ -117,4 +120,39 @@ test("touch threshold, keyboard activation, skip and economy quality", async ({
   await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
   await region.press("ArrowDown");
   await expect(film).toHaveAttribute("data-phase", "INTRO_ACTIVATING");
+});
+
+test("denied sound can retry, idle and replay have no live voice", async ({ page }) => {
+  await page.addInitScript(() => {
+    const resume = AudioContext.prototype.resume;
+    let deny = true;
+    AudioContext.prototype.resume = function () {
+      if (deny) {
+        deny = false;
+        return Promise.reject(new DOMException("gesture required", "NotAllowedError"));
+      }
+      return resume.call(this);
+    };
+  });
+  await page.goto("/");
+  const sound = page.locator(".soundControl button");
+  await sound.click();
+  await expect(sound).toHaveText("ENABLE SOUND");
+  await expect(page.getByRole("status")).toBeVisible();
+  await sound.click();
+  await expect(sound).toHaveText("SOUND READY");
+  await page.getByRole("region").press("ArrowDown");
+  await expect(sound).toHaveText("SOUND ON");
+  await page.getByLabel("探索时间轴").click();
+  await page.getByLabel("影片时间").fill("180");
+  await expect(sound).toHaveText("SOUND READY");
+  await page.getByRole("button", {name:"REPLAY STORY"}).click();
+  await expect(page.locator(".film")).toHaveAttribute("data-phase","INTRO_IDLE");
+  await expect(sound).toHaveText("SOUND READY");
+  await page.getByRole("region").press("ArrowDown");
+  await expect(sound).toHaveText("SOUND ON");
+  await sound.click();
+  await expect(sound).toHaveText("SOUND OFF");
+  await page.getByRole("button",{name:"LIVE LAB ↗",exact:true}).click();
+  await expect(sound).toHaveText("SOUND OFF");
 });

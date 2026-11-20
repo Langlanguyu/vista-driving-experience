@@ -540,3 +540,31 @@
   font-size: 10px;
   color: #a6ada3;
 }
+
+.apertureWords {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: min(80vw, 139svh);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  fill: #e9e8df;
+  font: 500 164px / 1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -.052em;
+}
+.soundControl button {min-width: 7.3em}
+.soundControl input {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 8px;
+  background: #25302c;
+  border-radius: 5px;
+  display: none;
+}
+.mast .soundControl input {bottom: auto; top: 100%}
+.soundControl:hover input,.soundControl:focus-within input {display:block}
+.opticsAdvanced {margin-top:14px}
+.opticsAdvanced summary {cursor:pointer;font-size:13px}

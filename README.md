@@ -1,5 +1,7 @@
 # VISTA · 协同感知驾驶舱
 
+当前电影版为 R6.2。首次向下滚动开始 180 秒影片，点击 ENABLE SOUND 后音乐从当前秒数进入。七个章节圆点可直接跳转，··· 可精确定位。演示与讲解可直接打开 [Live Lab](https://langlanguyu.github.io/vista-driving-experience/r6/?lab)。[R6.2 画面对照、声音与验收](docs/round62-verification.md)
+
 大学课程用协同感知 AR-HUD 仿真。Live Lab 提供货车遮挡、路口横穿和雨雾衰减三个 12 秒场景。Story Experience 通过滚动或自动播放驱动同一座城市中的七章、180 秒影片。所有场景、模型、字体回退和观测均在本机运行。
 
 ## Cinematic Final Cut
@@ -60,6 +62,6 @@ Playwright 在此机使用已有 Google Chrome，其他机器可指定 CHROME_PA
 - [R6 成片](https://langlanguyu.github.io/vista-driving-experience/r6/) · [稳定 Preview](https://langlanguyu.github.io/vista-driving-experience/) · [R6 验收](docs/round6-verification.md)
 - 仓库 https://github.com/Langlanguyu/vista-driving-experience
 - main 分支推送后由 .github/workflows/deploy.yml 自动构建并部署 Pages。
-- npm run package:offline 在 macOS 上生成 release/vista-r61.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
+- npm run package:offline 在 macOS 上生成 release/vista-r62.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
 - Vite 使用相对 base，模型、贴图、HDR 与署名通过 BASE_URL 加载，适配 Pages 仓库子路径与独立离线目录。
 - 历史截图、录屏、参考原件和压缩包保留在本地，Git 忽略这些大文件。更新时提交源码与 public 资产即可。

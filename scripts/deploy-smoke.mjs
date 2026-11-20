@@ -4,14 +4,14 @@ const root=process.env.VISTA_URL??"http://127.0.0.1:5173/",label=process.env.VIS
 await mkdir("release/verification",{recursive:true});
 const browser=await chromium.launch({channel:"chrome"});
 const ctx=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:"block"}),page=await ctx.newPage();
-const errors=[],blocked=[],models=new Set(),failed=[];
+const errors=[],blocked=[],models=new Set(),assets=new Set(),failed=[];
 await ctx.route("**/*",route=>{
   const url=new URL(route.request().url());
   if(url.origin!==new URL(root).origin){blocked.push(url.href);return route.abort();}
   return route.continue();
 });
 page.on("pageerror",e=>errors.push(e.message));
-page.on("response",r=>{if(r.status()>=400)failed.push([r.status(),r.url()]);if(r.url().endsWith(".glb")&&r.status()===200)models.add(new URL(r.url()).pathname)});
+page.on("response",r=>{if(r.ok()) assets.add(new URL(r.url()).pathname.split("/").pop());if(r.status()>=400)failed.push([r.status(),r.url()]);if(r.url().endsWith(".glb")&&r.status()===200)models.add(new URL(r.url()).pathname)});
 async function attr(selector,key,value){await page.waitForFunction(({selector,key,value})=>document.querySelector(selector)?.getAttribute(key)===value,{selector,key,value},{timeout:15000})}
 try{
  await page.addInitScript(()=>{
@@ -53,9 +53,10 @@ try{
  for(const t of [27,60,97,126,146.5,156,180])await page.getByLabel("影片时间").fill(String(t));
  await page.getByRole("button",{name:"REPLAY STORY",exact:true}).waitFor();
  await page.screenshot({path:"release/verification/"+label+".png"});
- await page.getByRole("button",{name:"LIVE LAB ↗",exact:true}).click();
+ await page.getByRole("button",{name:"ENTER LIVE LAB ↗",exact:true}).click();
  await page.getByLabel("驾驶场景").waitFor();
+ for(const asset of ["noon.hdr","daylight-clouds.webp","road-color.webp","forward-motion.m4a","still-air.m4a"]) if(!assets.has(asset)) throw Error("Missing local asset "+asset);
  if(models.size!==4||errors.length||blocked.length||failed.length)throw Error(JSON.stringify({models:[...models],errors,blocked,failed}));
- const result={url:root,browser:browser.version(),externalNetwork:"all non-origin requests blocked before fresh load",models:[...models],errors,blocked,failed,audio,checks:["sound-unlock-seek-lab","world","xray","quality-cycle","adaptive-left-right","degraded","optical-eye-box","seven-story-seeks","return-to-lab"]};
+ const result={url:root,browser:browser.version(),externalNetwork:"all non-origin requests blocked before fresh load",models:[...models],assets:[...assets].sort(),errors,blocked,failed,audio,checks:["sound-unlock-seek-lab","world","xray","quality-cycle","adaptive-left-right","degraded","optical-eye-box","seven-story-seeks","return-to-lab"]};
  await writeFile("release/verification/"+label+".json",JSON.stringify(result,null,2));console.log(label+" passed");
 }finally{await browser.close()}

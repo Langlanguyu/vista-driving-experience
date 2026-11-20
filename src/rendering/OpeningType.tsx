@@ -1,119 +1,57 @@
-import { useLayoutEffect, useMemo } from "react";
-import * as T from "three";
-
-// Sample coverage once. Every shard retains its place in the type and follows
-// the same reversible flight path whenever the director samples that second.
-export function OpeningType({
-  seconds,
-  low,
-}: {
-  seconds: number;
-  low: boolean;
-}) {
-  const model = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1060;
-    canvas.height = 332;
-    const ctx = canvas.getContext("2d")!;
-    ctx.font = '900 158px "Helvetica Neue", Arial, sans-serif';
-    ctx.textAlign = "center";
-    ctx.fillText("WHAT YOU", 530, 151);
-    ctx.fillText("CAN’T SEE.", 530, 299);
-    const wordEdge =
-      530 -
-      ctx.measureText("CAN’T SEE.").width / 2 +
-      ctx.measureText("CAN’T ").width;
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const stride = low ? 6 : 3;
-    const seeds: number[] = [];
-    const modes: number[] = [];
-    for (let y = 0; y < canvas.height; y += stride) {
-      for (let x = 0; x < canvas.width; x += stride) {
-        const coverage = pixels[(y * canvas.width + x) * 4 + 3] / 255;
-        if (coverage > 0.24) {
-          seeds.push((x - 530) / 495, (166 - y) / 495, coverage);
-          // Distance to the nearest blank along the glyph surface sets the peel order.
-          let inset = 18;
-          for (let d = 3; d <= 18; d += 3) {
-            if (
-              [
-                [d, 0],
-                [-d, 0],
-                [0, d],
-                [0, -d],
-              ].some(
-                ([dx, dy]) =>
-                  (pixels[((y + dy) * canvas.width + x + dx) * 4 + 3] ?? 0) <
-                  100,
-              )
-            ) {
-              inset = d;
-              break;
-            }
-          }
-          modes.push(+(y > 164 && x > wordEdge), inset / 18);
-        }
-      }
-    }
-    const geom = new T.InstancedBufferGeometry().copy(
-      new T.BoxGeometry() as unknown as T.InstancedBufferGeometry,
-    );
-    geom.setAttribute(
-      "seed",
-      new T.InstancedBufferAttribute(new Float32Array(seeds), 3),
-    );
-    geom.setAttribute(
-      "glyph",
-      new T.InstancedBufferAttribute(new Float32Array(modes), 2),
-    );
-    geom.instanceCount = seeds.length / 3;
-    const material = new T.ShaderMaterial({
-      uniforms: {
-        seconds: { value: 0 },
-        cell: { value: stride / 495 },
-        low: { value: +low },
-      },
-      vertexShader: `
-        attribute vec3 seed; attribute vec2 glyph;
-        uniform float seconds,cell,low;
-        varying vec3 tone;
-        void main(){
-          vec2 origin=seed.xy;
-          float hash=fract(sin(dot(origin,vec2(145.17,73.51)))*4385.17);
-          float focus=smoothstep(.25,2.3,seconds);
-          float band=floor(origin.y*18.)/18.;
-          float start=mix(2.8+1.65*(origin.x+.86),3.6+1.8*glyph.y+1.0*origin.x,glyph.x)+hash*.28;
-          float u=smoothstep(start,start+3.9,seconds);
-          vec3 p=vec3(origin,-1.17);
-          p.z+=glyph.x*.045*focus*(1.-u);
-          p.xy=mix(origin,vec2(.01,.055),u);
-          p.y+=sin(u*3.1416)*(.11+band*.30);
-          p.x+=sin(u*3.1416)*(.065+band*.18);
-          p.z-=u*(1.+u*(4.+2.*hash));
-          float theta=u*(2.1+3.*hash);
-          vec3 local=position*vec3(cell*1.02,cell*1.02,.017)*(1.-u);
-          local.xz=mat2(cos(theta),-sin(theta),sin(theta),cos(theta))*local.xz;
-          if(low>.5) {p=vec3(origin,-1.17); local*=1.-smoothstep(.02,.55,u);}
-          vec4 mv=modelViewMatrix*vec4(p+local,1.);
-          gl_Position=projectionMatrix*mv;
-          float highlight=.5+.5*sin(3.6*origin.x+1.8*origin.y-seconds*.20);
-          float light=.57+.35*normal.z+.12*normal.y;
-          tone=mix(vec3(.57,.63,.61),vec3(.99,.97,.86),highlight)*light*mix(.65,1.,seed.z);
-          tone*=mix(1.,mix(.44,1.24,glyph.x),focus);
-        }`,
-      fragmentShader: `varying vec3 tone;void main(){gl_FragColor=vec4(tone,1.);}`,
-    });
-    const mesh = new T.Mesh(geom, material);
-    mesh.frustumCulled = false;
-    return mesh;
-  }, [low]);
-  useLayoutEffect(
-    () => () => {
-      model.geometry.dispose();
-      model.material.dispose();
-    },
-    [model],
-  );
-  model.material.uniforms.seconds.value = seconds;
-  return <primitive object={model} />;
+// The title uses a 1000 × 380 layout. The WebGL counter and the typeset words
+// share the same fitting rule in story.css. Screen UVs always sample the live road.
+const sculpture = import.meta.env.DEV && new URLSearchParams(location.search).get("type") === "sculpture";
+export const apertureShader = `
+float glyph(vec2 p){
+  float outside=length(p*vec2(1.02,1.)) - 1.;
+  float counter=length((p-vec2(.14,-.025))*vec2(1.20,1.09)) - 1.;
+  float cut=min(p.x-.32,p.x*.50-abs(p.y+.03));
+  return max(max(outside,-counter*.82),cut);
 }
+` + (sculpture ? `
+float solid(vec3 p) {
+  vec2 d=vec2(glyph(p.xy),abs(p.z)-.17);
+  return min(max(d.x,d.y),0.)+length(max(d,0.))-.018;
+}
+vec4 sculpt(vec2 p,float t){
+  float angle=-.42+.98*smoothstep(.6,6.8,t);
+  mat2 yaw=mat2(cos(angle),sin(angle),-sin(angle),cos(angle));
+  vec3 ro=vec3(p,2.8),rd=normalize(vec3(p*.09,-1.));
+  ro.xz=yaw*ro.xz; rd.xz=yaw*rd.xz;
+  float travel=0.;
+  for(int i=0;i<52;i++){float h=solid(ro+rd*travel); if(h<.001 || travel>5.)break; travel+=h*.78;}
+  vec3 hit=ro+rd*travel;
+  if(solid(hit)>.004)return vec4(0.);
+  vec2 e=vec2(.001,0.);
+  vec3 n=normalize(vec3(solid(hit+e.xyy)-solid(hit-e.xyy),solid(hit+e.yxy)-solid(hit-e.yxy),solid(hit+e.yyx)-solid(hit-e.yyx)));
+  float lit=max(0.,dot(n,normalize(vec3(-.48,-.58,.7))));
+  return vec4(vec3(.76,.77,.72)*(.23+.83*lit)+.25*pow(max(0.,dot(reflect(rd,n),normalize(vec3(-.48,-.58,.7)))),22.),1.);
+}
+` : "") + `
+vec3 openingFrame(vec3 road, vec2 uv, float aspect, float seconds){
+  float reveal=smoothstep(2.,8.7,seconds);
+  float scale=exp2(4.85*reveal);
+  vec2 stage=(uv-vec2(.5,.55))*vec2(aspect,-1.)*1000./min(.8*aspect,1.39)+vec2(500.,190.);
+  vec2 center=mix(vec2(171.,246.),vec2(487.,191.),smoothstep(.9,6.6,seconds));
+  vec2 p=(stage-center)/(78.*scale);
+  float edge=glyph(p),aa=max(fwidth(edge),.0008);
+  float ink=1.-smoothstep(-aa,aa,edge);
+  float hole=length((p-vec2(.14,-.025))*vec2(1.20,1.09));
+  float windowMask=(1.-smoothstep(.997,1.003,hole))*smoothstep(.95,3.9,seconds);
+  float pool=exp(-1.7*length((uv-vec2(.38,.6))*vec2(aspect,.92)));
+  vec3 paper=vec3(.009,.014,.014)+vec3(.016,.023,.023)*pool;
+  vec3 image=mix(paper,road,windowMask);
+  vec3 enamel=mix(vec3(.45,.50,.48),vec3(.99,.94,.80),.5+.5*sin(-2.6*p.x+.91*p.y+.21*seconds));
+  enamel+=.14*exp(-abs(edge+.018)*70.);
+  ` + (sculpture ? `vec4 ceramic=sculpt(p,seconds);image=mix(image,ceramic.rgb,ceramic.a);` : `image=mix(image,enamel,ink);`) + `
+  // Three slivers shed at the open terminals and recede toward the vanishing point.
+  for(int i=0;i<3;i++){
+    float j=float(i),t=smoothstep(2.8+j*.24,5.9+j*.27,seconds);
+    vec2 origin=center+vec2(.76,(j-1.)*.30)*78.*scale;
+    vec2 loc=mix(origin,vec2(505.,180.),t);
+    vec2 chip=(stage-loc)/max(.01,(1.-t)*sin(t*3.14159));
+    float d=abs(chip.x)*.48+abs(chip.y+chip.x*.24)*2.;
+    image=mix(image,enamel,(1.-smoothstep(2.5,3.8,d))*(1.-t));
+  }
+  return mix(image,road,smoothstep(7.9,9.1,seconds));
+}`;

@@ -72,9 +72,10 @@ function Evidence({ shot }: { shot: StorySample }) {
 function Prologue({ sec }: { sec: number }) {
   return (
     <div className="openingLetterpress" aria-label="WHAT YOU CAN’T SEE.">
-      <small style={{ opacity: 1 - ramp(sec, 3, 6) }}>
-        VISTA　 /　 A DRIVING FILM
-      </small>
+      <svg aria-hidden="true" className="apertureWords" viewBox="0 0 1000 380" style={{opacity:1-ramp(sec,.8,3.5)}}>
+        <text x="90" y="145" textLength="818" lengthAdjust="spacingAndGlyphs">WHAT YOU</text>
+        <text x="251" y="318" textLength="658" lengthAdjust="spacingAndGlyphs">AN’T SEE.</text>
+      </svg>
       <strong
         style={{ opacity: ramp(sec, 10, 11.8) * (1 - ramp(sec, 13.2, 15)) }}
       >
@@ -224,7 +225,6 @@ export function Story({
   auto,
   setAuto,
   sound,
-  gestureSound,
 }: {
   progress: number;
   shot: StorySample;
@@ -234,7 +234,6 @@ export function Story({
   auto: boolean;
   setAuto: (v: boolean) => void;
   sound: React.ReactNode;
-  gestureSound: () => void;
 }) {
   const scroll = useRef<HTMLDivElement>(null);
   const [explore, setExplore] = useState(false);
@@ -267,7 +266,6 @@ export function Story({
     if (!ready || triggered.current || position.current > 0) return;
     triggered.current = true;
     setAuto(true);
-    gestureSound();
   }
   function replay() {
     triggered.current = false;
@@ -347,7 +345,6 @@ export function Story({
               triggered.current = true;
               write(15 / filmDuration);
               setAuto(true);
-              gestureSound();
             }}
           >
             跳过序幕 ↗
@@ -383,9 +380,9 @@ export function Story({
             ))}
           </nav>
           {sound}
-          <button onClick={toggle} aria-label={auto ? "暂停叙事" : "自动播放"}>
+          {phase !== "STORY_FINISHED" && phase !== "INTRO_IDLE" && <button onClick={toggle} aria-label={auto ? "暂停叙事" : "自动播放"}>
             {auto ? "Ⅱ" : "▶"}
-          </button>
+          </button>}
           <button
             aria-expanded={explore}
             aria-label="探索时间轴"
@@ -393,22 +390,9 @@ export function Story({
           >
             ···
           </button>
-          <button onClick={enter}>LIVE LAB ↗</button>
+          {phase !== "STORY_FINISHED" && <button onClick={enter}>LIVE LAB ↗</button>}
           {explore && (
             <div className="exploreStrip">
-              <select
-                aria-label="故事章节"
-                value={shot.chapter}
-                onChange={(e) =>
-                  seek(chapters[+e.target.value].start / filmDuration)
-                }
-              >
-                {chapters.map((ch, i) => (
-                  <option value={i} key={i}>
-                    {ch.title}
-                  </option>
-                ))}
-              </select>
               <input
                 type="range"
                 aria-label="影片时间"

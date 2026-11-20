@@ -1,4 +1,4 @@
-import { AudioDirector } from "./AudioDirector";
+import { AudioDirector, type SoundState } from "./AudioDirector";
 import { assetUrl } from "../utils/assetUrl";
 import { scenarios, type Scenario, type Side } from "../data/scenarios";
 import { Story } from "../components/Story";
@@ -72,10 +72,10 @@ function App() {
     [optical, setOptical] = useState(opticalDefaults);
   const [ready, setReady] = useState(false),
     [auto, setAuto] = useState(false);
-  const [audible, setAudible] = useState(false),
+  const [audioState, setAudioState] = useState<SoundState>("locked"),
     [volume, setVolume] = useState(0.62),
     [audioError, setAudioError] = useState("");
-  const [director] = useState(() => new AudioDirector(setAudible));
+  const [director] = useState(() => new AudioDirector(setAudioState));
   const [visible, setVisible] = useState(!document.hidden);
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
@@ -92,21 +92,25 @@ function App() {
       ready && visible && (!story || (auto && scroll < 1)),
     );
   }, [director, ready, visible, story, auto, scroll]);
-  const explicitMute = useRef(false);
+  const enabled = ["ready", "playing", "silent"].includes(audioState);
+  const soundLabel = { locked: "ENABLE SOUND", blocked: "ENABLE SOUND", ready: "SOUND READY", playing: "SOUND ON", muted: "SOUND OFF", silent: "SOUND OFF" }[audioState];
   const sound = (
     <span className="soundControl">
       <button
-        aria-pressed={audible}
+        aria-pressed={enabled && volume > 0}
         title={audioError || "声音"}
         onClick={() => {
-          explicitMute.current = audible;
-          if (audible) director.mute();
+          setAudioError("");
+          if (audioState === "silent") {
+            setVolume(0.62);
+            director.volume(0.62);
+          } else if (enabled) director.mute();
           else void director.enable().catch((e) => setAudioError(String(e)));
         }}
       >
-        {audible ? "SOUND ON" : "ENABLE SOUND"}
+        {soundLabel}
       </button>
-      {audible && (
+      {enabled && (
         <input
           aria-label="音量"
           type="range"
@@ -120,7 +124,7 @@ function App() {
           }}
         />
       )}
-      {audioError && !audible && <small role="status">{audioError}</small>}
+      {audioError && !enabled && <small role="status">{audioError}</small>}
     </span>
   );
   const labOptical = !story && opticalOpen;
@@ -221,14 +225,6 @@ function App() {
           auto={auto}
           setAuto={setAuto}
           sound={sound}
-          gestureSound={() => {
-            if (
-              !audible &&
-              navigator.userActivation?.isActive &&
-              !explicitMute.current
-            )
-              void director.enable().catch((e) => setAudioError(String(e)));
-          }}
           progress={scroll}
           shot={shot}
           change={setScroll}
@@ -261,15 +257,9 @@ function App() {
             <div className="drawerContent">
               <div className="drawerHead">
                 <div>
-                  <span className="micro">DRIVE LAB</span>
                   <h2>演示控制</h2>
                 </div>
-                <button
-                  aria-label="收起演示抽屉"
-                  onClick={() => setPanel(false)}
-                >
-                  <Icon name="close" />
-                </button>
+
               </div>
               <label className="trackLabel">
                 场景时间{" "}

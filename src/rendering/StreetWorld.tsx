@@ -8,6 +8,7 @@ import { makeCockpit, disposeLocal } from "./cockpit";
 import { cargoBody } from "./cargoBody";
 import { freightMarkings, contactShadow } from "./streetSigns";
 import { makeCity } from "./city";
+import { Daylight, daylight } from "./Daylight";
 import { Weather } from "./Weather";
 import { vehicleModel, visibleDimensions } from "./vehicleModel";
 import { makeXray } from "./spatialXray";
@@ -217,7 +218,7 @@ export function StreetWorld({
   }, [consoleScreen]);
   const cabin = useMemo(() => makeCockpit(Math.round(cfg.egoSpeed * 3.6)), []);
   const sun = useMemo(() => {
-    const l = new T.DirectionalLight("#fff2dc", 2.05);
+    const l = new T.DirectionalLight("#fff3df", daylight.sun);
     l.castShadow = true;
     l.shadow.mapSize.set(2048, 2048);
     Object.assign(l.shadow.camera, {
@@ -301,7 +302,7 @@ export function StreetWorld({
     cabin.visible = !inspect && cabinOn;
     egoBody.position.set(0, 0, -n + 0.42);
     egoBody.visible = inspect || exterior;
-    sun.position.set(73.8, 38.3, -n - 42 + 54.4);
+    sun.position.set(53.7, 74.5, -n - 42 + 39.0);
     sun.target.position.set(0, 0, -n - 42);
     invalidate();
   }, [
@@ -329,31 +330,12 @@ export function StreetWorld({
         attach="fog"
         args={[
           s.weather === "fog" ? "#b4c1c3" : "#c6d8e3",
-          0.0028 + s.fog * 0.048,
+          daylight.density + s.fog * 0.048,
         ]}
       />
-      <Environment
-        files={assetUrl("hausdorf.hdr")}
-        background
-        backgroundIntensity={1.04 - s.fog * 0.48}
-        environmentIntensity={0.66 - s.fog * 0.28}
-      />
-      {/* Match the skyline haze to distance fog. The photographed countryside sits
-          below the simulated city horizon and must not silhouette distant towers. */}
-      <mesh position={[0, 0, -s.ego.position.north]} renderOrder={-20}>
-        <sphereGeometry args={[680, 32, 16]} />
-        <shaderMaterial
-          side={T.BackSide}
-          transparent
-          depthWrite={false}
-          vertexShader={`varying float altitude;void main(){altitude=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`}
-          fragmentShader={`varying float altitude;void main(){float haze=1.-smoothstep(.095,.255,altitude);gl_FragColor=vec4(vec3(.56,.682,.77),haze);
-          #include <tonemapping_fragment>
-          #include <colorspace_fragment>
-          }`}
-        />
-      </mesh>
-      <hemisphereLight args={["#d6e6f7", "#998779", 0.64]} />
+      <Environment files={assetUrl("noon.hdr")} environmentIntensity={0.73 - s.fog * 0.28} />
+      <Daylight fog={s.fog} north={s.ego.position.north} />
+      <hemisphereLight args={["#d6e6f7", "#998779", daylight.ambient]} />
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={city} />
@@ -395,7 +377,7 @@ export function StreetWorld({
         <>
           <hemisphereLight args={["#c6dffa", "#90877a", 0.87]} />
           <directionalLight
-            position={[73.8, 38.3, 54.4]}
+            position={[53.7, 74.5, 39.0]}
             color="#fff2dc"
             intensity={2.25}
           />
