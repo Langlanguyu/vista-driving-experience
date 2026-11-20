@@ -29,3 +29,7 @@ R5 从雨雾预设的状态变化入手，保持已验证的降级与恢复，�
 ## R6 Cinematic Final Cut
 
 默认进入 180 秒影片，统一时钟等待场景就绪，支持静音自动播放、字形空间解构、光机剖面、有限视场、中控特写与路口收尾。Story 与 Lab 各有本地原创音轨。开发分支 r6-cinematic-final-cut，Preview 与 R6 分路径发布。镜头、音频及真机采样见 [本轮验收](round6-verification.md)。
+
+## R6.1 Visual & Audio Refinement
+
+首个向下动作启动影片，随后连续播放。新增《Forward Motion》全长原创配乐。光学组件按传播次序揭示，移除了半透明仪表台横穿光路的问题。城市日光、车漆、路面和十字路口车外交汇已在生产版浏览器采集对照。[验收与截图时间](round61-verification.md)

@@ -32,7 +32,7 @@ export class AudioDirector {
           );
       }
       this.buffers ??= Promise.all(
-        ["sightlines", "still-air"].map(async (name) => {
+        ["forward-motion", "still-air"].map(async (name) => {
           const response = await fetch(
             import.meta.env.BASE_URL + "audio/" + name + ".m4a",
           );

@@ -169,7 +169,13 @@ test("optical inspection, boundary and center display are reversible and restore
   assert.ok(at(146.5).reality.eyeX > 0.065);
   assert.ok(at(156).future.console > 0.95);
   assert.equal(at(180).future.console, 0);
-  assert.equal(at(180).cabinOpacity, 1);
+  assert.equal(at(160).cabinOpacity, 1);
+  assert.equal(at(180).cabinOpacity, 0);
+  assert.equal(at(180).exterior, true);
+  for (let sec = 105; sec < 136; sec += 0.1) {
+    const o = at(sec).optics;
+    if (o.section > 0.01) assert.ok(o.dashboardReveal > 0.99);
+  }
   const a = at(126);
   at(173);
   assert.deepEqual(at(126), a);

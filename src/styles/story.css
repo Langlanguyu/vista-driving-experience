@@ -512,3 +512,31 @@
     width: 55%;
   }
 }
+.film .storyScroll {
+  overflow: hidden;
+  touch-action: none;
+}
+.introInvitation {
+  position: absolute;
+  z-index: 2;
+  bottom: 17%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: grid;
+  gap: 7px;
+  pointer-events: auto;
+}
+.introInvitation button {
+  color: #e1e2d4;
+  background: transparent;
+  border: 0;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 10px;
+}
+.introInvitation button + button {
+  font-size: 10px;
+  color: #a6ada3;
+}

@@ -108,3 +108,9 @@ Story.tsx 将原生滚动或实际经过时间归一化。章节重看和时间�
 researchProjection 根据眼点、已知钢梁端点和车辆观测生成共享的单调逆映射纹理。ProjectionPass 对扩大的离轴世界缓冲区采样，SpatialHUD 反解同一纹理，独立的驾驶舱通道保持正常透视。Story 与 Lab 共享这条管线。
 
 opticalRayTracer 保存驾驶员局部系内的有限镜面及曲面函数，反向试射、正向核验、虚像回归与显示范围判定可脱离 WebGL 测试。OpticalAssembly 把相同交点和真实口径送入座舱场景。consoleDisplay 直接读取 SceneState，在实体屏幕上绘制路口与目标。第 04–06 章所有剖开、镜头与图像状态均为 storyFrame 的纯函数。[投影方法](projection-research.md) · [光学模型](optical-model.md)
+
+### R6.1 首次交互与光学切换
+
+Story 通过单一归一化进度产生摄像机、声音、空间显影与 UI。加载完毕后停在 INTRO_IDLE，首次向下滚轮、向上滑动或向下键锁定一次激活。INTRO_ACTIVATING、INTRO_DISSOLVING、STORY_AUTOPLAY、STORY_PAUSED、STORY_FINISHED 由播放意图、进度和激活锁决定。原生滚动不再写入影片时间，精确 seek 位于展开的时间轴。Replay 清除锁并回到零秒。AudioDirector 只在有实际授权时开启，暂停或隐藏页面会释放正在播放的音源。
+
+光学剖面遵循先隐去仪表台和街景、再移动剖面相机、最后展示光路的顺序。返回时先复位相机。PGU 与两面镜子的近景首先占据画面，随后随追迹进度扩展至风挡与眼盒。仿真的求交、反射和虚像重建算法沿用 R5B。

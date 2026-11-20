@@ -41,7 +41,7 @@ function lettering(word: string) {
   canvas.width = 620;
   canvas.height = 80;
   const ctx = canvas.getContext("2d")!;
-  ctx.font = "500 40px Helvetica Neue, sans-serif";
+  ctx.font = "600 44px Helvetica Neue, sans-serif";
   ctx.fillStyle = "#edf1e6";
   ctx.fillText(word, 3, 54);
   const map = new T.CanvasTexture(canvas);
@@ -50,13 +50,13 @@ function lettering(word: string) {
     new T.SpriteMaterial({ map, depthTest: false, transparent: true }),
   );
   sprite.center.set(0, 0.5);
-  sprite.scale.set(0.43, 0.056, 1);
+  sprite.scale.set(0.49, 0.064, 1);
   sprite.renderOrder = 12;
   return sprite;
 }
 function plate(s: Surface, color: string, clear = false) {
   const mesh = new T.Mesh(
-    new T.BoxGeometry(s.width, s.height, clear ? 0.002 : 0.012),
+    new T.BoxGeometry(s.width, s.height, clear ? 0.003 : 0.012),
     new T.MeshStandardMaterial({
       color,
       metalness: clear ? 0.15 : 0.68,
@@ -123,6 +123,31 @@ export function OpticalAssembly({
       base.position.addScaledVector(s.normal, -0.012);
       parts.add(base);
       if (name === "pgu") {
+        const housing = plate(
+          { ...s, width: s.width + 0.042, height: s.height + 0.045 },
+          "#374148",
+        );
+        housing.scale.z = 4.2;
+        housing.position.addScaledVector(s.normal, -0.034);
+        parts.add(housing);
+        for (const u of [-1, 1])
+          for (const w of [-1, 1]) {
+            const screw = new T.Mesh(
+              new T.CylinderGeometry(0.004, 0.004, 0.003, 6),
+              new T.MeshStandardMaterial({
+                color: "#9ca49f",
+                metalness: 0.7,
+                roughness: 0.31,
+              }),
+            );
+            screw.position
+              .copy(s.center)
+              .addScaledVector(s.horizontal, u * (s.width / 2 + 0.012))
+              .addScaledVector(s.vertical, w * (s.height / 2 + 0.012))
+              .addScaledVector(s.normal, -0.007);
+            screw.quaternion.setFromUnitVectors(v(0, 1, 0), s.normal);
+            parts.add(screw);
+          }
         for (let j = -2; j <= 2; j++) {
           const fin = plate(
             { ...s, width: s.width + 0.026, height: 0.004 },
@@ -206,9 +231,9 @@ export function OpticalAssembly({
     ];
     parts.add(line(rimLoop.map(edgePoints), "#d7dccc"));
     const entries: [string, T.Vector3, T.Vector3][] = [
-      ["PGU", b.emitter.center, v(0.1, -0.115, 0.1)],
-      ["M1  /  FOLD", b.mirror1.center, v(0, -0.19, -0.1)],
-      ["FREEFORM MIRROR", b.mirror2.center, v(0.02, -0.1, 0.08)],
+      ["PGU", b.emitter.center, v(0.03, 0.105, -0.045)],
+      ["FOLD MIRROR", b.mirror1.center, v(0.02, -0.096, -0.25)],
+      ["FREEFORM MIRROR", b.mirror2.center, v(0.02, -0.12, 0.15)],
       ["WINDSHIELD", b.glass.center, v(0.03, 0.15, -0.12)],
       ["EYEBOX", b.eye.center, v(0, 0.095, 0.01)],
     ];
@@ -216,7 +241,11 @@ export function OpticalAssembly({
       const end = origin.clone().add(offset),
         tag = lettering(word);
       tag.position.copy(end);
-      labels.add(line([origin, end], "#84958b"), tag);
+      const leader = line([origin, end], "#8e9c94");
+      const threshold =
+        word === "EYEBOX" ? 0.68 : word === "WINDSHIELD" ? 0.39 : 0;
+      tag.userData.threshold = leader.userData.threshold = threshold;
+      labels.add(leader, tag);
     }
     const eye = new T.Mesh(
       new T.SphereGeometry(0.007),
@@ -234,7 +263,7 @@ export function OpticalAssembly({
         l.material.opacity = primary ? 0.95 : 0.24;
         if (primary) {
           const beam = new T.Mesh(
-            new T.CylinderGeometry(0.0034, 0.0034, 1, 10),
+            new T.CylinderGeometry(0.0039, 0.0039, 1, 10),
             new T.MeshBasicMaterial({ color: "#ffce85" }),
           );
           beam.quaternion.setFromUnitVectors(
@@ -244,6 +273,7 @@ export function OpticalAssembly({
           beam.userData = { start: p[j], end: p[j + 1], leg: j, beam: true };
           paths.add(beam);
         }
+        l.userData.secondary = !primary;
         l.userData.leg = j;
         l.userData.start = p[j];
         l.userData.end = p[j + 1];
@@ -344,7 +374,7 @@ export function OpticalAssembly({
       const mat = o.material as T.Material;
       if (mat.userData.nativeOpacity === undefined)
         mat.userData.nativeOpacity = mat.opacity;
-      mat.transparent = true;
+      mat.transparent = hardware < 0.999 || mat.userData.nativeOpacity < 1;
       mat.opacity = hardware * mat.userData.nativeOpacity;
     }
   });
@@ -359,11 +389,16 @@ export function OpticalAssembly({
     l.frustumCulled = false;
   };
   labels.visible = section > 0.56;
+  labels.children.forEach((n) => (n.visible = real >= n.userData.threshold));
   paths.visible = real > 0.01;
   paths.children.forEach((l) => {
     const progress = T.MathUtils.clamp(real * 4 - l.userData.leg, 0, 1);
     l.visible = progress > (l instanceof T.Line ? 0.001 : 0.37);
-    if (l instanceof T.Line) clipLine(l, progress);
+    if (l instanceof T.Line) {
+      if (l.userData.secondary)
+        l.material.opacity = 0.24 * T.MathUtils.smoothstep(real, 0.85, 1);
+      clipLine(l, progress);
+    } else if (!l.userData.beam) l.visible = progress > 0.69;
     if (l.userData.beam) {
       const { start, end } = l.userData;
       l.visible = progress > 0.002;

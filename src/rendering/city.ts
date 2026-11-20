@@ -92,11 +92,11 @@ export function makeCity(
   const road = new T.Mesh(
     new T.PlaneGeometry(25, 630),
     new T.MeshStandardMaterial({
-      color: "#9a9a96",
+      color: "#858988",
       map: roadMaps[0],
       normalMap: roadMaps[1],
       roughnessMap: roadMaps[2],
-      normalScale: new T.Vector2(0.38, 0.38),
+      normalScale: new T.Vector2(0.57, 0.57),
       roughness: 0.95,
     }),
   );
@@ -564,7 +564,7 @@ export function makeCity(
     wet = new T.Color("#646a6b");
   city.userData.wet = (amount: number) => {
     road.material.color.copy(dry).lerp(wet, amount);
-    road.material.roughness = 0.95 - 0.72 * amount;
+    road.material.roughness = 0.88 - 0.65 * amount;
     road.material.envMapIntensity = 1 + 0.65 * amount;
   };
   city.userData.release = () => {

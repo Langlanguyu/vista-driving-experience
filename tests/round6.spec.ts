@@ -29,6 +29,18 @@ test("default film waits for assets, unlocks real audio at film time and preserv
   await expect(film).toHaveAttribute("data-seconds", "0.000");
   await expect(film).toHaveAttribute("data-playing", "false");
   resume();
+  await expect(page.locator(".view")).toHaveAttribute("data-ready", "true", {
+    timeout: 45000,
+  });
+  await page.waitForTimeout(300);
+  await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
+  await expect(film).toHaveAttribute("data-seconds", "0.000");
+  await page.mouse.move(640, 300);
+  await page.mouse.wheel(0, -900);
+  await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
+  await page.mouse.wheel(0, 900);
+  await page.mouse.wheel(0, 6000);
+  await expect(film).toHaveAttribute("data-phase", "INTRO_ACTIVATING");
   await expect(film).toHaveAttribute("data-playing", "true", {
     timeout: 45000,
   });
@@ -65,4 +77,44 @@ test("default film waits for assets, unlocks real audio at film time and preserv
   await expect(page.getByText("ENABLE SOUND", { exact: true })).toBeVisible();
   await page.reload();
   await expect(film).toHaveAttribute("data-chapter", "0");
+});
+
+test("touch threshold, keyboard activation, skip and economy quality", async ({
+  page,
+}) => {
+  await page.goto("/?quality=low");
+  await expect(page.locator(".view")).toHaveAttribute("data-ready", "true");
+  await expect(page.locator(".view")).toHaveAttribute("data-quality", "low");
+  const region = page.getByRole("region"),
+    film = page.locator(".film");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 2,
+  });
+  const swipe = async (end: number) => {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: 640, y: 230 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: 640, y: end }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+  };
+  await swipe(224);
+  await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
+  await swipe(150);
+  await expect(film).toHaveAttribute("data-playing", "true");
+  await page.reload();
+  await page.getByRole("button", { name: "跳过序幕 ↗" }).click();
+  await expect(film).toHaveAttribute("data-chapter", "1");
+  await page.getByRole("button", { name: "Prologue", exact: true }).click();
+  await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
+  await region.press("ArrowDown");
+  await expect(film).toHaveAttribute("data-phase", "INTRO_ACTIVATING");
 });

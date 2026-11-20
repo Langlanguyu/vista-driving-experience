@@ -62,7 +62,7 @@ test("mirror expansion keeps the eye fixed and registers the estimated point wit
     expect(offset).toBeLessThan(2);
   }
 });
-test("three live presets reset the clock; story wheel drives and reverses the camera; the ending hands control to lab on request", async ({
+test("three live presets reset the clock; the first wheel starts the story and explicit exploration reverses the camera; the ending hands control to lab on request", async ({
   page,
 }) => {
   await page.goto("/?lab");
@@ -79,16 +79,11 @@ test("three live presets reset the clock; story wheel drives and reverses the ca
   await page.getByLabel("驾驶场景").selectOption("truck");
   await expect(view).toHaveAttribute("data-time", "2.400");
   await page.getByRole("button", { name: "STORY EXPERIENCE" }).click();
-  const eye = await view.getAttribute("data-eye");
   await page.mouse.move(680, 370);
   await page.mouse.wheel(0, 900);
-  await expect(page.locator(".film")).toHaveAttribute("data-playing","false");
-  await expect(view).not.toHaveAttribute("data-eye", eye!);
-  const scroll = page.getByRole("region", { name: "滚动控制三维镜头" });
-  const go = (n: number) =>
-    scroll.evaluate((el, n) => {
-      el.scrollTop = n * (el.scrollHeight - el.clientHeight);
-    }, n);
+  await expect(page.locator(".film")).toHaveAttribute("data-playing", "true");
+  await page.getByLabel("探索时间轴").click();
+  const go = (n: number) => page.getByLabel("影片时间").fill(String(n * 180));
   await go(36 / 180);
   await expect(
     page.getByRole("heading", { name: "Behind the truck." }),

@@ -26,13 +26,13 @@ const pulse = (t: number, a: number, b: number, c: number, d: number) =>
 export function opticalScene(progress: number) {
   return {
     progress,
-    section: pulse(progress, 0.1, 0.4, 0.83, 1),
+    section: pulse(progress, 0.22, 0.36, 0.82, 0.93),
     angle: 1.12 + 0.28 * ramp(progress, 0.32, 0.7),
-    dashboardReveal: pulse(progress, 0.21, 0.46, 0.84, 0.99),
-    opticalComponentVisibility: pulse(progress, 0.18, 0.42, 0.84, 0.98),
-    rayRevealProgress: pulse(progress, 0.11, 0.45, 0.85, 0.98),
-    virtualRayProgress: pulse(progress, 0.6, 0.77, 0.82, 0.96),
-    environmentFade: pulse(progress, 0.14, 0.52, 0.83, 0.99),
+    dashboardReveal: pulse(progress, 0.065, 0.22, 0.93, 0.995),
+    opticalComponentVisibility: pulse(progress, 0.1, 0.24, 0.9, 0.985),
+    rayRevealProgress: pulse(progress, 0.36, 0.63, 0.82, 0.91),
+    virtualRayProgress: pulse(progress, 0.64, 0.75, 0.81, 0.9),
+    environmentFade: pulse(progress, 0.09, 0.22, 0.93, 1),
     image: 1 - ramp(progress, 0.12, 0.25) + ramp(progress, 0.9, 1),
   };
 }
@@ -48,7 +48,7 @@ export function realityComparison(progress: number) {
 export function cockpitFuture(progress: number) {
   return {
     progress,
-    exterior: 0,
+    exterior: ramp(progress, 16 / 29, 24 / 29),
     console: pulse(progress, 2 / 29, 4 / 29, 7 / 29, 9 / 29),
     signature: ramp(progress, 19 / 29, 25 / 29),
   };

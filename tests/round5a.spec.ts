@@ -68,7 +68,8 @@ test("five real HUD representations, chapter seeks, restart and reversible Lab d
   await range.fill("180");
   await page.getByRole("button", { name: "REPLAY STORY" }).click();
   await expect(film).toHaveAttribute("data-chapter", "0");
-  await expect(film).toHaveAttribute("data-playing", "true");
+  await expect(film).toHaveAttribute("data-phase", "INTRO_IDLE");
+  await expect(film).toHaveAttribute("data-playing", "false");
   expect(
     await canvas!.evaluate((el) => el === document.querySelector("canvas")),
   ).toBeTruthy();

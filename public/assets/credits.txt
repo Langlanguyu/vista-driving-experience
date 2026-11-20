@@ -22,3 +22,8 @@ Round 3 daylight sky: Poly Haven, Kloofendal 48d Partly Cloudy (Pure Sky), 1K HD
 https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky
 CC0 — https://polyhaven.com/license
 New cockpit, windshield, instrument graphics and box body fitted to the credited cargo chassis are original scene additions.
+
+R6.1 daylight, reflections and sun direction: Hausdorf Clear Sky (1K HDR),
+Grzegorz Wronkowski / Poly Haven. CC0.
+https://polyhaven.com/a/hausdorf_clear_sky
+https://polyhaven.com/license

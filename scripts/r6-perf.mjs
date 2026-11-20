@@ -1,5 +1,6 @@
 import { chromium } from "playwright";
 import { writeFile } from "node:fs/promises";
+const refinement = process.argv.includes("--r61");
 const url = process.env.VISTA_URL ?? "http://127.0.0.1:4186/";
 const browser = await chromium.launch({ channel: "chrome" });
 try {
@@ -17,6 +18,19 @@ try {
       "How light reaches you",
     ]) {
       await page.getByRole("button", { name: title, exact: true }).click();
+      if (refinement) {
+        if (title === "Prologue") {
+          await page.mouse.move(600, 330);
+          await page.mouse.wheel(0, 450);
+        } else {
+          await page.getByLabel("探索时间轴").click();
+          await page
+            .getByLabel("影片时间")
+            .fill(title === "Beyond the frame" ? "54" : "116");
+          await page.getByLabel("探索时间轴").click();
+          await page.getByLabel("自动播放").click();
+        }
+      }
       const data = await page.evaluate(async () => {
         const el = document.querySelector(".film"),
           gl = document.querySelector("canvas").getContext("webgl2");
@@ -55,7 +69,9 @@ try {
   }
   console.log(result);
   await writeFile(
-    "docs/verification/r6/perf.json",
+    refinement
+      ? "docs/verification/r61/perf.json"
+      : "docs/verification/r6/perf.json",
     JSON.stringify({ url, browser: browser.version(), result }, null, 2),
   );
 } finally {

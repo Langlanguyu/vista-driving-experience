@@ -1,4 +1,4 @@
-import {assetUrl} from "../utils/assetUrl";
+import { assetUrl } from "../utils/assetUrl";
 import { useLayoutEffect, useMemo } from "react";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import { Environment, useGLTF, useTexture } from "@react-three/drei";
@@ -136,9 +136,45 @@ export function StreetWorld({
     }
     invalidate();
   }, [reveal, surfaces, invalidate]);
+  const coupe = useMemo(() => {
+    const model = carFile.scene.clone(true);
+    const finishes = new Map<T.Material, T.MeshStandardMaterial>();
+    model.traverse((node) => {
+      if (
+        !(node instanceof T.Mesh) ||
+        !(node.material instanceof T.MeshStandardMaterial)
+      )
+        return;
+      const source = node.material;
+      let m = finishes.get(source);
+      if (!m) {
+        m = source.clone() as T.MeshStandardMaterial;
+        if (/paint/i.test(m.name)) {
+          m.metalness = 0.68;
+          m.roughness = 0.29;
+          if (m instanceof T.MeshPhysicalMaterial) {
+            m.clearcoat = 0.94;
+            m.clearcoatRoughness = 0.095;
+          }
+        } else if (/tire/i.test(m.name)) {
+          m.roughness = 0.92;
+          m.metalness = 0;
+        } else if (/rim/i.test(m.name)) {
+          m.roughness = 0.3;
+          m.metalness = 0.87;
+        }
+        finishes.set(source, m);
+      }
+      node.material = m;
+    });
+    return { model, release: () => finishes.forEach((m) => m.dispose()) };
+  }, [carFile]);
+  useLayoutEffect(() => () => coupe.release(), [coupe]);
+  const footprint = useMemo(() => contactShadow(2.85, 4.95), []);
+  useLayoutEffect(() => () => footprint.userData.release(), [footprint]);
   const target = useMemo(
-    () => vehicleModel(carFile.scene, cfg.targetSize[2]),
-    [carFile],
+    () => vehicleModel(coupe.model, cfg.targetSize[2]),
+    [coupe],
   );
   const ghost = useMemo(() => makeXray(target), [target]);
   useLayoutEffect(() => () => ghost.userData.release(), [ghost]);
@@ -148,7 +184,7 @@ export function StreetWorld({
       [-12.4, -97, "#777f7c"],
       [5.65, -102, "#9f9a8c"],
     ] as const) {
-      const car = vehicleModel(carFile.scene, cfg.targetSize[2]);
+      const car = vehicleModel(coupe.model, cfg.targetSize[2]);
       car.position.set(x, 0, z);
       if (x < 0) car.rotation.y = Math.PI;
       car.traverse((n) => {
@@ -166,10 +202,10 @@ export function StreetWorld({
       g.add(car);
     }
     return g;
-  }, [carFile]);
+  }, [coupe]);
   const egoBody = useMemo(
-    () => vehicleModel(carFile.scene, cfg.targetSize[2]),
-    [carFile],
+    () => vehicleModel(coupe.model, cfg.targetSize[2]),
+    [coupe],
   );
   const consoleScreen = useMemo(centerDisplay, []);
   useLayoutEffect(() => {
@@ -181,7 +217,7 @@ export function StreetWorld({
   }, [consoleScreen]);
   const cabin = useMemo(() => makeCockpit(Math.round(cfg.egoSpeed * 3.6)), []);
   const sun = useMemo(() => {
-    const l = new T.DirectionalLight("#fff0d8", 2.25);
+    const l = new T.DirectionalLight("#fff2dc", 2.05);
     l.castShadow = true;
     l.shadow.mapSize.set(2048, 2048);
     Object.assign(l.shadow.camera, {
@@ -236,6 +272,8 @@ export function StreetWorld({
     truck.position.set(s.truth.truck.east, 0, -s.truth.truck.north);
     target.position.set(s.truth.target.east, 0, -s.truth.target.north);
     target.rotation.y = -s.targetHeading;
+    footprint.position.set(target.position.x, 0.018, target.position.z);
+    footprint.rotation.set(-Math.PI / 2, 0, -s.targetHeading, "YXZ");
     truck.visible = s.scenario !== "cross";
     ghost.userData.setIntensity(xrayAmount);
     ghost.visible =
@@ -263,7 +301,7 @@ export function StreetWorld({
     cabin.visible = !inspect && cabinOn;
     egoBody.position.set(0, 0, -n + 0.42);
     egoBody.visible = inspect || exterior;
-    sun.position.set(-56, 46, -n + 32);
+    sun.position.set(73.8, 38.3, -n - 42 + 54.4);
     sun.target.position.set(0, 0, -n - 42);
     invalidate();
   }, [
@@ -291,22 +329,31 @@ export function StreetWorld({
         attach="fog"
         args={[
           s.weather === "fog" ? "#b4c1c3" : "#c6d8e3",
-          0.0023 + s.fog * 0.048,
+          0.0028 + s.fog * 0.048,
         ]}
       />
       <Environment
-        files={assetUrl("noon.hdr")}
-        background="only"
-        backgroundIntensity={0.88 - s.fog * 0.42}
-        backgroundRotation={[0, 1.2, 0]}
-        environmentRotation={[0, 1.2, 0]}
-        environmentIntensity={0.65}
+        files={assetUrl("hausdorf.hdr")}
+        background
+        backgroundIntensity={1.04 - s.fog * 0.48}
+        environmentIntensity={0.66 - s.fog * 0.28}
       />
-      <Environment
-        files={assetUrl("reflection.hdr")}
-        environmentIntensity={0.82 - s.fog * 0.32}
-      />
-      <hemisphereLight args={["#c6dffa", "#90877a", 0.87]} />
+      {/* Match the skyline haze to distance fog. The photographed countryside sits
+          below the simulated city horizon and must not silhouette distant towers. */}
+      <mesh position={[0, 0, -s.ego.position.north]} renderOrder={-20}>
+        <sphereGeometry args={[680, 32, 16]} />
+        <shaderMaterial
+          side={T.BackSide}
+          transparent
+          depthWrite={false}
+          vertexShader={`varying float altitude;void main(){altitude=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`}
+          fragmentShader={`varying float altitude;void main(){float haze=1.-smoothstep(.095,.255,altitude);gl_FragColor=vec4(vec3(.56,.682,.77),haze);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+          }`}
+        />
+      </mesh>
+      <hemisphereLight args={["#d6e6f7", "#998779", 0.64]} />
       <primitive object={sun} />
       <primitive object={sun.target} />
       <primitive object={city} />
@@ -331,6 +378,7 @@ export function StreetWorld({
             />
           </mesh>
         )}
+      <primitive object={footprint} />
       <primitive object={parked} />
       <primitive object={truck} />
       <primitive object={ghost} />
@@ -347,8 +395,8 @@ export function StreetWorld({
         <>
           <hemisphereLight args={["#c6dffa", "#90877a", 0.87]} />
           <directionalLight
-            position={[-56, 46, 74]}
-            color="#fff0d8"
+            position={[73.8, 38.3, 54.4]}
+            color="#fff2dc"
             intensity={2.25}
           />
           <primitive object={cabin} />

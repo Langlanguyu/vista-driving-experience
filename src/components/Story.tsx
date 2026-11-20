@@ -143,40 +143,35 @@ function FilmCaption({ shot }: { shot: StorySample }) {
   } else if (k === 4) {
     const shots: [string, string, string, number][] = [
       [
-        "The light behind the image.",
-        "The image is virtual. The light is real.",
-        "THE LIGHT BEHIND THE IMAGE",
+        "A windshield display.",
+        "你看到的箭头位于挡风玻璃前方。",
+        "DRIVER VIEW",
         105,
       ],
       [
-        "Into the eye box.",
-        "金色实线表示从风挡反射、进入眼盒的光。",
-        "FOLLOW THE LIGHT",
-        109,
-      ],
-      [
-        "Beneath the dash.",
-        "图像源发光，折叠镜与曲面主镜将光送向风挡。",
+        "Under the dashboard.",
+        "仪表台内，PGU 产生图像，两面镜子折叠光路。",
         "HARDWARE REVEAL",
-        113,
+        108,
       ],
       [
-        "Three reflections.",
-        "沿箭头依次观察 M1、M2 和风挡上的三个反射点。",
-        "OPTICAL ISOLATION",
-        120,
+        "Follow the light.",
+        "金色箭头从图像源出发，经折叠镜与曲面主镜到达风挡。",
+        "PGU → MIRRORS → WINDSHIELD",
+        116,
       ],
+      ["Into the eye.", "挡风玻璃把光反射入眼。", "WINDSHIELD → EYEBOX", 122],
       [
-        "A virtual image.",
-        "沿接收方向反向延伸，虚像落在风挡前方。",
-        "PERCEIVED BEYOND THE WINDSHIELD",
-        124,
+        "Beyond the glass.",
+        "沿入眼光线反向延伸，虚线交会处形成虚像。",
+        "VIRTUAL IMAGE",
+        125,
       ],
       [
         "Back on the road.",
-        "同一束光在驾驶员视野中重新形成提示。",
+        "光机回到仪表台内，虚像留在前方。",
         "DRIVER VIEW",
-        131,
+        132,
       ],
     ];
     [title, cn, tag, start] = shots.filter((v) => sec >= v[3]).at(-1)!;
@@ -229,6 +224,7 @@ export function Story({
   auto,
   setAuto,
   sound,
+  gestureSound,
 }: {
   progress: number;
   shot: StorySample;
@@ -238,40 +234,49 @@ export function Story({
   auto: boolean;
   setAuto: (v: boolean) => void;
   sound: React.ReactNode;
+  gestureSound: () => void;
 }) {
   const scroll = useRef<HTMLDivElement>(null);
   const [explore, setExplore] = useState(false);
   const position = useRef(progress);
   position.current = progress;
-  const initial = useRef(progress);
-  // Native scrollTop is quantized in CSS pixels. Ignore acknowledgements of
-  // commanded seeks, otherwise an exact chapter start may round into its predecessor.
-  const commandedTop = useRef<number | null>(null);
-  function moveScroll(el: HTMLDivElement, n: number) {
-    el.scrollTop = n * (el.scrollHeight - el.clientHeight);
-    commandedTop.current = el.scrollTop;
-  }
-  const write = (p: number) => {
-    const el = scroll.current;
-    if (!el) return;
-    const n = clamp(p);
-    position.current = n;
-    moveScroll(el, n);
-    change(n);
+  const triggered = useRef(auto || progress > 0);
+  const touchY = useRef<number | null>(null);
+  const write = (value: number) => {
+    position.current = clamp(value);
+    change(position.current);
   };
-  const seek = (p: number) => {
+  const seek = (value: number) => {
+    triggered.current = value > 0;
     setAuto(false);
-    write(p);
+    write(value);
   };
+  const phase =
+    shot.sec >= filmDuration
+      ? "STORY_FINISHED"
+      : !triggered.current && progress === 0 && !auto
+        ? "INTRO_IDLE"
+        : !auto
+          ? "STORY_PAUSED"
+          : shot.sec < 2
+            ? "INTRO_ACTIVATING"
+            : shot.sec < 15
+              ? "INTRO_DISSOLVING"
+              : "STORY_AUTOPLAY";
+  function activate() {
+    if (!ready || triggered.current || position.current > 0) return;
+    triggered.current = true;
+    setAuto(true);
+    gestureSound();
+  }
+  function replay() {
+    triggered.current = false;
+    setAuto(false);
+    write(0);
+    scroll.current?.focus({ preventScroll: true });
+  }
   useLayoutEffect(() => {
-    const el = scroll.current!;
-    moveScroll(el, initial.current);
-    el.focus({ preventScroll: true });
-    const ro = new ResizeObserver(() => {
-      moveScroll(el, position.current);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    scroll.current?.focus({ preventScroll: true });
   }, []);
   useEffect(() => {
     if (!auto || !ready) return;
@@ -289,29 +294,16 @@ export function Story({
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
   }, [auto, change, ready]);
-  useEffect(() => {
-    const el = scroll.current!;
-    const wheel = (e: WheelEvent) => {
-      if (!ready || e.ctrlKey) return;
-      e.preventDefault();
-      const unit =
-        e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1;
-      seek(
-        position.current +
-          (e.deltaY * unit) / Math.max(1, el.scrollHeight - el.clientHeight),
-      );
-    };
-    el.addEventListener("wheel", wheel, { passive: false });
-    return () => el.removeEventListener("wheel", wheel);
-  }, [ready, change, setAuto]);
   const toggle = () => {
-    if (position.current >= 1) write(0);
-    setAuto(!auto);
+    if (phase === "STORY_FINISHED") replay();
+    else if (phase === "INTRO_IDLE") activate();
+    else setAuto(!auto);
   };
   const c = chapters[shot.chapter];
   return (
     <div
       className="film"
+      data-phase={phase}
       data-chapter={shot.chapter}
       data-seconds={shot.sec.toFixed(3)}
       data-playing={auto && ready}
@@ -322,24 +314,46 @@ export function Story({
         tabIndex={0}
         role="region"
         aria-label="滚动控制三维镜头"
-        onScroll={(e) => {
-          if (!auto) {
-            const el = e.currentTarget;
-            if (el.scrollTop === commandedTop.current) return;
-            commandedTop.current = null;
-            change(clamp(el.scrollTop / (el.scrollHeight - el.clientHeight)));
-          }
+        onWheel={(e) => {
+          if (!e.ctrlKey && e.deltaY > 0) activate();
         }}
-        onTouchStart={() => setAuto(false)}
+        onTouchStart={(e) => {
+          touchY.current = e.touches[0]?.clientY ?? null;
+        }}
+        onTouchEnd={(e) => {
+          if (
+            touchY.current !== null &&
+            touchY.current - e.changedTouches[0].clientY > 22
+          )
+            activate();
+          touchY.current = null;
+        }}
         onKeyDown={(e) => {
-          if (e.key === " ") {
+          if (e.repeat) return;
+          if (["ArrowDown", "PageDown", "Enter"].includes(e.key)) {
+            e.preventDefault();
+            activate();
+          } else if (e.key === " ") {
             e.preventDefault();
             toggle();
-          } else setAuto(false);
+          }
         }}
-      >
-        <div className="filmScrollLength" />
-      </div>
+      />
+      {phase === "INTRO_IDLE" && ready && (
+        <div className="introInvitation">
+          <button onClick={activate}>↓　向下滑动开启影片</button>
+          <button
+            onClick={() => {
+              triggered.current = true;
+              write(15 / filmDuration);
+              setAuto(true);
+              gestureSound();
+            }}
+          >
+            跳过序幕 ↗
+          </button>
+        </div>
+      )}
       <div className="filmShading" />
       <FilmCaption shot={shot} />
       {ready && (
@@ -354,7 +368,15 @@ export function Story({
                 title={ch.title}
                 aria-label={ch.title}
                 aria-current={shot.chapter === i ? "step" : undefined}
-                onClick={() => write(ch.start / filmDuration)}
+                onClick={() => {
+                  if (ch.start === 0) {
+                    replay();
+                    return;
+                  }
+                  triggered.current = true;
+                  write(ch.start / filmDuration);
+                  setAuto(true);
+                }}
               >
                 <i />
               </button>
@@ -408,14 +430,7 @@ export function Story({
       )}
       {shot.sec >= 179.98 && (
         <div className="filmEnd">
-          <button
-            onClick={() => {
-              write(0);
-              setAuto(true);
-            }}
-          >
-            REPLAY STORY
-          </button>
+          <button onClick={replay}>REPLAY STORY</button>
           <button onClick={enter}>ENTER LIVE LAB ↗</button>
         </div>
       )}

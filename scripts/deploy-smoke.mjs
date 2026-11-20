@@ -27,7 +27,7 @@ try{
      return start.apply(this,args);
    };
  });
- await page.goto(root);await attr(".view","data-ready","true");await attr(".film","data-playing","true");
+ await page.goto(root);await attr(".view","data-ready","true");await attr(".film","data-phase","INTRO_IDLE");await page.mouse.move(600,320);await page.mouse.wheel(0,500);await attr(".film","data-playing","true");
  await page.getByRole("button",{name:"Beyond the frame",exact:true}).click();
  await page.getByRole("button",{name:"ENABLE SOUND",exact:true}).click();
  await page.getByRole("button",{name:"SOUND ON",exact:true}).waitFor();

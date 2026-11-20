@@ -33,6 +33,7 @@ import type { StorySample } from "../scenes/story";
 import { SpatialHUD } from "./SpatialHUD";
 import { cfg } from "../scenes/corridor";
 const params = new URLSearchParams(location.search);
+const economy = params.get("quality") === "low";
 const lens = Number(params.get("fov")) || cfg.horizontalFov;
 export function Drive({
   s,
@@ -193,6 +194,7 @@ export function Drive({
     vid: settings.vid,
     console: film?.future.console ?? 0,
     bench: solution.bench,
+    rayProgress: real,
     film: !!film,
   };
   const [showHud, setShowHud] = useState(hud);
@@ -213,6 +215,7 @@ export function Drive({
       data-image-distance={solution.image?.length().toFixed(5)}
       data-boundary={boundary.toFixed(3)}
       data-admission={admission}
+      data-quality={economy ? "low" : "high"}
       data-console={film?.future.console.toFixed(3)}
       data-owner={owner}
       data-yaw={s.camera.yaw.toFixed(5)}
@@ -244,7 +247,7 @@ export function Drive({
       <Canvas
         shadows="percentage"
         frameloop="demand"
-        dpr={[1, 1.25]}
+        dpr={economy ? [0.75, 1] : [1, 1.25]}
         camera={{ far: 760, near: 0.045 }}
         gl={{
           antialias: true,
@@ -302,6 +305,7 @@ export function Drive({
             )}
           {story && <CrossingTitle opacity={film?.crossingType ?? 0} />}
           <ProjectionPass
+            economy={economy}
             strength={strength}
             field={field}
             opticalView={opticalView}

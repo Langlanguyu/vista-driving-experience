@@ -34,3 +34,5 @@
 ## R5B
 
 光学组件、镜面采样网格、虚像符号、光线、眼盒和中控地图均由本仓库代码生成。文献用于确定设计案例参数和技术方法，页面未嵌入论文插图或外部模拟器素材。验收 JPG 来自本机 Chrome PNG 的分区裁切及拼排，WebM 为同一程序的实际播放录屏。来源记录见 [光学模型](optical-model.md) 和 [投影研究](projection-research.md)。
+
+R6.1 的晴空、车漆反射和自然照明共享 Grzegorz Wronkowski 拍摄的 Hausdorf Clear Sky，采用 1K Radiance HDR，发行文件 MD5 为 dc4cd5f588eeaea8544e4163dd5e590d。按全景最亮太阳采样方向布置阴影光源，并在城市地平线处与远景雾衔接。资源许可为 CC0。[Poly Haven 原件](https://polyhaven.com/a/hausdorf_clear_sky) · [许可](https://polyhaven.com/license)

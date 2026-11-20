@@ -71,7 +71,7 @@ function App() {
     [opticalOpen, openOptical] = useState(false),
     [optical, setOptical] = useState(opticalDefaults);
   const [ready, setReady] = useState(false),
-    [auto, setAuto] = useState(true);
+    [auto, setAuto] = useState(false);
   const [audible, setAudible] = useState(false),
     [volume, setVolume] = useState(0.62),
     [audioError, setAudioError] = useState("");
@@ -92,12 +92,14 @@ function App() {
       ready && visible && (!story || (auto && scroll < 1)),
     );
   }, [director, ready, visible, story, auto, scroll]);
+  const explicitMute = useRef(false);
   const sound = (
     <span className="soundControl">
       <button
         aria-pressed={audible}
         title={audioError || "声音"}
         onClick={() => {
+          explicitMute.current = audible;
           if (audible) director.mute();
           else void director.enable().catch((e) => setAudioError(String(e)));
         }}
@@ -219,6 +221,14 @@ function App() {
           auto={auto}
           setAuto={setAuto}
           sound={sound}
+          gestureSound={() => {
+            if (
+              !audible &&
+              navigator.userActivation?.isActive &&
+              !explicitMute.current
+            )
+              void director.enable().catch((e) => setAudioError(String(e)));
+          }}
           progress={scroll}
           shot={shot}
           change={setScroll}

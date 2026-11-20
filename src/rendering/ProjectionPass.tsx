@@ -17,6 +17,7 @@ export function ProjectionPass({
   wipe = 1,
   opening = -1,
   cabinOpacity = 1,
+  economy,
 }: {
   strength: number;
   field: Field | null;
@@ -29,6 +30,7 @@ export function ProjectionPass({
     vid: number;
     console: number;
     film: boolean;
+    rayProgress: number;
     bench: ReturnType<typeof import("../domain/opticalRayTracer").opticalBench>;
   };
   compare: number;
@@ -36,6 +38,7 @@ export function ProjectionPass({
   cabinOn: boolean;
   cockpitFov: number;
   opening?: number;
+  economy: boolean;
   study?: number;
   wipe?: number;
   cabinOpacity?: number;
@@ -45,7 +48,7 @@ export function ProjectionPass({
       type: T.HalfFloatType,
       depthBuffer: true,
       stencilBuffer: true,
-      samples: 2,
+      samples: economy ? 0 : 2,
     });
     const cabinTarget = target.clone();
     cabinTarget.stencilBuffer = false;
@@ -91,11 +94,11 @@ export function ProjectionPass({
         y=a==0.?y:.5+.5*grid.y;
         vec3 world=texture2D(source,vec2((raw-edges.x)/(edges.y-edges.x),y)).rgb*(1.-isolate);
         float light=exp(-2.8*length(vec2(x-.28,1.3*(cabinUV.y-.57))));
-        world=mix(world,vec3(.012,.022,.021)+vec3(.075,.099,.091)*light,studio);
+        world=mix(world,vec3(.040,.052,.054)+vec3(.145,.165,.152)*light,studio);
         if(opening>=0.){
-          vec2 center=vec2(.5,.51);
+          vec2 center=mix(vec2(.60,.42),vec2(.5,.51),smoothstep(5.,9.,opening));
           float distanceToRoad=length((cabinUV-center)*vec2(.85,1.2));
-          float radius=mix(-.16,1.,smoothstep(6.4,10.9,opening));
+          float radius=mix(-.16,1.,smoothstep(5.3,10.7,opening));
           float ink=smoothstep(radius-.09,radius+.09,distanceToRoad);
           vec3 studioLight=vec3(.008,.011,.010)+vec3(.034,.039,.034)*exp(-3.*distanceToRoad);
           world=mix(world,studioLight,ink);
@@ -129,7 +132,7 @@ export function ProjectionPass({
       camera: new T.PerspectiveCamera(),
       size: new T.Vector2(),
     };
-  }, []);
+  }, [economy]);
   useEffect(
     () => () => {
       pass.uniforms.lattice.value.dispose();
@@ -204,8 +207,11 @@ export function ProjectionPass({
             (extent.y + 0.25) / (2 * Math.tan(halfAngle)),
             (extent.z + 0.26) / (2 * Math.tan(halfAngle) * cc.aspect),
           );
+        const closeup = opticalView.film
+          ? 1 - T.MathUtils.smoothstep(opticalView.rayProgress, 0.39, 0.86)
+          : 0;
         const distance = opticalView.film
-          ? fitted + 0.52 * virtual
+          ? fitted * (1 - 0.32 * closeup) + 0.52 * virtual
           : 1.15 + virtual * vid * 0.76;
         const target = new T.Vector3(
           0,
@@ -214,7 +220,12 @@ export function ProjectionPass({
         );
         if (opticalView.film) {
           bounds.getCenter(target);
+          const hardwareCenter = b.mirror2.center
+            .clone()
+            .lerp(b.emitter.center, 0.52);
+          target.lerp(hardwareCenter, 0.83 * closeup);
           target.z -= virtual * 0.36;
+          target.lerp(b.mirror2.center, 0.26 * (1 - virtual));
         }
         const position = target
           .clone()
@@ -222,7 +233,7 @@ export function ProjectionPass({
             new T.Vector3(
               Math.sin(orbit - (opticalView.film ? virtual * 1.12 : 0)) *
                 distance,
-              0.23 + virtual * 0.5,
+              0.33 + virtual * 0.4,
               Math.cos(orbit - (opticalView.film ? virtual * 1.12 : 0)) *
                 distance,
             ),

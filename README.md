@@ -4,7 +4,7 @@
 
 ## Cinematic Final Cut
 
-默认入口在街区资源载入后自动播放 180 秒 Story。点击 ENABLE SOUND 从当前镜头开启原创配乐。七个章节点可跳转，空格暂停，滚轮可逐帧探索，底部「···」展开精确定位。结束时可重播或进入 Live Lab。链接参数 `?lab` 直接进入驾驶实验室，`?quality=low` 使用低成本字形遮罩。
+默认入口停在完整标题。首次向下滚动、上滑或按向下键启动 180 秒影片，随后自动播放。点击 ENABLE SOUND 开启与当前镜头同步的配乐。空格暂停或继续，七个章节点用于跳转，「···」可精确定位，重播会回到标题待机。直接进入实验室使用 `?lab`，普通设备可选 `?quality=low`。
 
 [原创声音与授权](docs/audio-credits.md) · [视觉参考实察](docs/r6-reference-audit.md)
 
@@ -60,6 +60,6 @@ Playwright 在此机使用已有 Google Chrome，其他机器可指定 CHROME_PA
 - [R6 成片](https://langlanguyu.github.io/vista-driving-experience/r6/) · [稳定 Preview](https://langlanguyu.github.io/vista-driving-experience/) · [R6 验收](docs/round6-verification.md)
 - 仓库 https://github.com/Langlanguyu/vista-driving-experience
 - main 分支推送后由 .github/workflows/deploy.yml 自动构建并部署 Pages。
-- npm run package:offline 在 macOS 上生成 release/vista-r6-final-cut.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
+- npm run package:offline 在 macOS 上生成 release/vista-r61.zip。解压后双击 Start VISTA.command，保留终端窗口即可运行。附带 Intel / Apple Silicon 通用本地服务，不需要 Node.js、npm 或 Python。
 - Vite 使用相对 base，模型、贴图、HDR 与署名通过 BASE_URL 加载，适配 Pages 仓库子路径与独立离线目录。
 - 历史截图、录屏、参考原件和压缩包保留在本地，Git 忽略这些大文件。更新时提交源码与 public 资产即可。

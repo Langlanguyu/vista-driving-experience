@@ -277,9 +277,9 @@ export function makeCockpit(speedKmh: number) {
       m.depthWrite = amount < 0.03 && record.depth;
     }
     for (const node of body) node.visible = amount < 0.995;
-    windshield.opacity = 0.07 + 0.17 * amount;
+    windshield.opacity = 0.07 + 0.06 * amount;
     lip.visible = amount > 0.005;
-    lip.material.opacity = amount * 0.4;
+    lip.material.opacity = amount * 0.16;
   };
   cabin.traverse(
     (o) =>
