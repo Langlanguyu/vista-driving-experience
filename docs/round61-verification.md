@@ -24,3 +24,9 @@ R6.1 基于 e4c67a5，在独立分支 r6.1-visual-audio 上开发。GitHub Pages
 Chrome 实际访问了现网 Preview、RI.Studio 和 Codrops。RI.Studio 以立体房间和大字共享一个构图，滚动后标题进入房间前景。Codrops 在线 Demo 出现访问验证；从作者仓库在临时目录运行原版示例，固定其 MSDF 依赖版本后点击 Start。实际看到金色完整字形先停留，字面局部开空，随后红色片状与白色小点离开原轮廓。本项目将阶段组织用于 SEE 的边缘解体与道路同向运动。参考 Demo、字体与音频均未纳入发行包。[作者示例](https://github.com/WallabyMonochrome/WebGPU-clair-obscur-gommage-codrops) · [RI.Studio](https://www.rikoutaku.work/)
 
 离线验收从 ZIP 解压、运行随包附带的 macOS 本地服务，在全新 Chrome 会话拦截所有非本机请求。新音轨、四份 GLB、左右投影、三种感知场景和光学实验通过。验收原始数据位于 release/verification/r61-offline.json。
+
+## 正式站点
+
+[Pages 部署 44664884891](https://github.com/Langlanguyu/vista-driving-experience/actions/runs/44664884891) 已成功。Chrome 从[电影入口](https://langlanguyu.github.io/vista-driving-experience/r6/)验证了标题待机、首次向下滚动、音乐跳章、Lab 环境声、四份 GLB、X-Ray、左右投影、光学眼盒和片尾操作。冷启动验收中页面异常和资源失败均为零；根入口 JS 与稳定 Preview 包相同。公网原始记录在 release/verification/r61-pages.json。
+
+将成片中浏览器实录音轨与发行音乐按 10 ms RMS 包络比较，在 5、50、115、170 秒取样的相关系数均超过 0.995，四处最佳偏移均为 10 ms。此项检查针对导出文件内的音乐时间，不代表扬声器硬件时延。
