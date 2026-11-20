@@ -22,6 +22,20 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Check out the cinematic cut alongside the stable preview
+        uses: actions/checkout@v4
+        with:
+          ref: r6-cinematic-final-cut
+          path: cinematic-cut
+          persist-credentials: false
+      - run: npm ci
+        working-directory: cinematic-cut
+      - run: npm test
+        working-directory: cinematic-cut
+      - run: npm run build
+        working-directory: cinematic-cut
+      - name: Add the independent R6 entry point
+        run: mv cinematic-cut/dist dist/r6
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
